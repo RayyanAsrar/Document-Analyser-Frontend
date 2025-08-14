@@ -2,11 +2,14 @@ import React from "react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Upload, MessageSquare, Zap, Shield, FileText, Brain } from "lucide-react";
+import { Navbar } from "../components/Navbar";
 
 export default function HomePage() {
   return (
+    <>
+    <Navbar/>
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
+      {/* Hero Section */} 
       <div className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center">
@@ -149,5 +152,6 @@ export default function HomePage() {
         </div>
       </footer>
     </div>
+    </>
   );
 }

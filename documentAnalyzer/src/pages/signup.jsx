@@ -1,4 +1,6 @@
 import React, { useState } from "react"
+import { Link } from "react-router-dom";
+
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Label } from "../components/ui/label"
@@ -92,16 +94,12 @@ export default function SignUpPage() {
               type="submit"
               className="w-full hover:scale-105 transition-all duration-200 hover:shadow-lg"
             >
-              Create Account
+              <Link to="/signup">Create Account</Link> 
             </Button>
             <p className="text-sm text-muted-foreground text-center">
-              Already have an account?{" "}
-              <a
-                href="/login"
-                className="text-primary hover:underline transition-all duration-200 hover:scale-105 inline-block"
-              >
-                Sign in
-              </a>
+              Already have an account?
+              <Link to="/login" className="text-primary hover:underline transition-all duration-200 hover:scale-105 inline-block" > Sign in </Link>
+            
             </p>
           </CardFooter>
         </form>

@@ -31,7 +31,7 @@ export function Navbar() {
         </div>
 
         {/* Center: Upload Image button */}
-        <Button
+        {/* <Button
           type="button"
           onClick={handleUploadClick}
           aria-label="Upload image"
@@ -40,7 +40,7 @@ export function Navbar() {
         >
           <Upload className="h-4 w-4" />
           <span>Upload Image</span>
-        </Button>
+        </Button> */}
 
         {/* Right: Theme toggle + profile dropdown */}
         <div className="flex items-center space-x-2 animate-in slide-in-from-right duration-500">
