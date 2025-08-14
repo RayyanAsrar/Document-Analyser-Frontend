@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Button } from "../ui/button";
-import { ScrollArea } from "../ui/scroll-area";
+import { Button } from "./ui/button";
+import { ScrollArea } from "./ui/scroll-area";
 import { ChevronLeft, ChevronRight, FileImage, Clock } from "lucide-react";
-import { cn } from "../../lib/utils";
+import { cn } from "../lib/utils";
 
 const dummyHistory = [
   { id: 1, name: "Invoice_2024.pdf", date: "2 hours ago", type: "pdf" },

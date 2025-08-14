@@ -1,8 +1,8 @@
 import React, { useState } from "react"
-import { Button } from "./components/ui/button"
-import { Input } from "./components/ui/input"
-import { Label } from "./components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./components/ui/card"
+import { Button } from "../components/ui/button"
+import { Input } from "../components/ui/input"
+import { Label } from "../components/ui/label"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -45,10 +45,12 @@ export default function LoginPage() {
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="transition-all duration-200 focus:scale-[1.02]"
+                className="transition-all duration-200 focus:scale-[1.02] mb-4"
                 required
               />
             </div>
+
+           
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button

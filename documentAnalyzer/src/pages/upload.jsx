@@ -1,8 +1,8 @@
 import React from "react"
-import { Navbar } from "./components/navbar"
-import { Sidebar } from "./components/sidebar"
-import { MainContent } from "./components/main-content"
-import { ChatBox } from "./components/chat-box"
+import { Navbar } from "../components/Navbar"
+import { Sidebar } from "../components/Sidebar"
+import { MainContent } from "../components/MainContent"
+import { ChatBox } from "../components/ChatBox"
 
 export default function UploadPage() {
   return (

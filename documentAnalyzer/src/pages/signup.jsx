@@ -1,7 +1,7 @@
 import React, { useState } from "react"
-import { Button } from "./components/ui/button"
-import { Input } from "./components/ui/input"
-import { Label } from "./components/ui/label"
+import { Button } from "../components/ui/button"
+import { Input } from "../components/ui/input"
+import { Label } from "../components/ui/label"
 import {
   Card,
   CardContent,
@@ -9,7 +9,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "./components/ui/card"
+} from "../components/ui/card"
 
 export default function SignUpPage() {
   const [name, setName] = useState("")
@@ -29,7 +29,7 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 animate-in fade-in duration-700">
-      <Card className="w-full max-w-md animate-in slide-in-from-bottom duration-500 delay-200">
+      <Card className="w-full max-w-md animate-in slide-in-from-bottom duration-500 delay-200 ">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Create account</CardTitle>
           <CardDescription className="text-center">
@@ -82,7 +82,7 @@ export default function SignUpPage() {
                 placeholder="Confirm your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="transition-all duration-200 focus:scale-[1.02]"
+                className="transition-all duration-200 focus:scale-[1.02] mb-4"
                 required
               />
             </div>

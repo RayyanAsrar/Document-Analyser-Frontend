@@ -1,12 +1,11 @@
-import React from "react";
-import { Button } from "../ui/button";
 import { Upload, Settings, User as UserIcon, Moon, Sun } from "lucide-react";
+import { Button } from "../components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+} from "../components/ui/dropdown-menu";
 import { useTheme } from "../context/ThemeProvider";
 
 export function Navbar() {
