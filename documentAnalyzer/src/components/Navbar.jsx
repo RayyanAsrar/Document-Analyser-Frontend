@@ -15,9 +15,6 @@ export function Navbar() {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
-  const handleUploadClick = () => {
-    document.getElementById("file-input")?.click();
-  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 animate-in slide-in-from-top duration-500">
@@ -30,19 +27,7 @@ export function Navbar() {
           <span className="font-semibold text-lg">Document Analyzer</span>
         </div>
 
-        {/* Center: Upload Image button */}
-        {/* <Button
-          type="button"
-          onClick={handleUploadClick}
-          aria-label="Upload image"
-          className="flex items-center space-x-2 hover:scale-105 transition-all duration-200 hover:shadow-lg animate-in fade-in [animation-duration:700ms] delay-300"
-
-        >
-          <Upload className="h-4 w-4" />
-          <span>Upload Image</span>
-        </Button> */}
-
-        {/* Right: Theme toggle + profile dropdown */}
+   
         <div className="flex items-center space-x-2 animate-in slide-in-from-right duration-500">
           <Button
             type="button"

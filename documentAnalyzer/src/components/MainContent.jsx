@@ -4,7 +4,7 @@ import { Button } from "./ui/button";
 import { Upload, ArrowDown } from "lucide-react";
 import { cn } from "../lib/utils";
 
-export function MainContent() {
+export function MainContent({ onImageUpload }) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadedImage, setUploadedImage] = useState(null);
 
@@ -31,11 +31,13 @@ export function MainContent() {
         const result = ev?.target?.result;
         if (typeof result === "string") {
           setUploadedImage(result);
+          // Notify parent component that image was uploaded
+          onImageUpload?.(true);
         }
       };
       reader.readAsDataURL(imageFile);
     }
-  }, []);
+  }, [onImageUpload]);
 
   const handleFileSelect = useCallback((e) => {
     const file = e?.target?.files?.[0];
@@ -45,37 +47,49 @@ export function MainContent() {
         const result = ev?.target?.result;
         if (typeof result === "string") {
           setUploadedImage(result);
+          // Notify parent component that image was uploaded
+          onImageUpload?.(true);
         }
       };
       reader.readAsDataURL(file);
     }
-  }, []);
+  }, [onImageUpload]);
 
   const handleUploadClick = () => {
     const input = document.getElementById("file-input");
     if (input) input.click();
   };
 
+  const handleNewUpload = () => {
+    setUploadedImage(null);
+    // Notify parent component that image was removed
+    onImageUpload?.(false);
+  };
+
   if (uploadedImage) {
     return (
-      <div className="flex-1 p-6">
-        <Card className="h-full p-4 animate-in fade-in duration-500">
-          <div className="h-full flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Image Preview</h3>
-              <Button
-                variant="outline"
-                onClick={() => setUploadedImage(null)}
-                className="hover:scale-105 transition-transform"
-              >
-                Upload New Image
-              </Button>
-            </div>
-            <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 p-6 overflow-hidden">
+        <Card className="h-full p-4 animate-in fade-in duration-500 flex flex-col">
+          {/* Header - Fixed height */}
+          <div className="flex items-center justify-between mb-4 flex-shrink-0">
+            <h3 className="text-lg font-semibold">Image Preview</h3>
+            <Button
+              variant="outline"
+              onClick={handleNewUpload}
+              className="hover:scale-105 transition-transform"
+            >
+              Upload New Image
+            </Button>
+          </div>
+          
+          {/* Image Container - Scrollable area with fixed height */}
+          <div className="flex-1 overflow-auto min-h-0">
+            <div className="flex items-start justify-center h-full">
               <img
                 src={uploadedImage || "/placeholder.svg"}
                 alt="Uploaded document"
-                className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                className="max-w-full h-auto object-contain rounded-lg shadow-lg"
+                style={{ maxHeight: 'none' }} // Allow natural height, container will scroll
               />
             </div>
           </div>
