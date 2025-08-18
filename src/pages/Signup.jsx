@@ -1,9 +1,9 @@
-import React, { useState } from "react"
-import { Link } from "react-router-dom";
-
-import { Button } from "../components/ui/button"
-import { Input } from "../components/ui/input"
-import { Label } from "../components/ui/label"
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 import {
   Card,
   CardContent,
@@ -11,23 +11,41 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "../components/ui/card"
+} from "../components/ui/card";
 
 export default function SignUpPage() {
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
     if (password !== confirmPassword) {
-      alert("Passwords do not match")
-      return
+      console.error("Passwords do not match");
+      return;
     }
-    // TODO: Implement signup logic
-    console.log("Signup attempt:", { name, email, password })
-  }
+
+    setLoading(true);
+    try {
+      // backend expects: { username, email, password, name }
+      const username = name.trim().replace(/\s+/g, "_").toLowerCase() || email.split("@")[0];
+      await register({ username, email, password, name });
+
+      console.log("Signup successful. Redirecting to login...");
+      navigate("/login");
+    } catch (err) {
+      const errorMsg = err?.response?.data?.message || err?.message || "Signup failed";
+      console.error("Signup error:", errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 animate-in fade-in duration-700">
@@ -92,18 +110,23 @@ export default function SignUpPage() {
           <CardFooter className="flex flex-col space-y-4">
             <Button
               type="submit"
+              disabled={loading}
               className="w-full hover:scale-105 transition-all duration-200 hover:shadow-lg"
             >
-              <Link to="/signup">Create Account</Link> 
+              {loading ? "Creating..." : "Create Account"}
             </Button>
             <p className="text-sm text-muted-foreground text-center">
-              Already have an account?
-              <Link to="/login" className="text-primary hover:underline transition-all duration-200 hover:scale-105 inline-block" > Sign in </Link>
-            
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="text-primary hover:underline transition-all duration-200 hover:scale-105 inline-block"
+              >
+                Sign in
+              </Link>
             </p>
           </CardFooter>
         </form>
       </Card>
     </div>
-  )
+  );
 }

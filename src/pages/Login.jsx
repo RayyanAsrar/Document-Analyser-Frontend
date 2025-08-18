@@ -1,18 +1,41 @@
-import React, { useState } from "react"
-import { Button } from "../components/ui/button"
-import { Input } from "../components/ui/input"
-import { Label } from "../components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card"
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    // TODO: Implement login logic
-    console.log("Login attempt:", { email, password })
-  }
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      await login({ email, password });
+      console.log("Login successful. Redirecting to dashboard...");
+      navigate("/upload");
+    } catch (err) {
+      const errorMsg = err?.response?.data?.message || err?.message || "Login failed";
+      console.error("Login error:", errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 animate-in fade-in duration-700">
@@ -49,18 +72,17 @@ export default function LoginPage() {
                 required
               />
             </div>
-
-           
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button
               type="submit"
+              disabled={loading}
               className="w-full hover:scale-105 transition-all duration-200 hover:shadow-lg"
             >
-              Sign In
+              {loading ? "Signing in..." : "Sign In"}
             </Button>
             <p className="text-sm text-muted-foreground text-center">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <a
                 href="/signup"
                 className="text-primary hover:underline transition-all duration-200 hover:scale-105 inline-block"
@@ -72,5 +94,5 @@ export default function LoginPage() {
         </form>
       </Card>
     </div>
-  )
+  );
 }
