@@ -12,6 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
+import { toast } from "sonner";
+import { Toaster } from "../components/ui/sonner"; // use this instead
+
 
 export default function SignUpPage() {
   const { register } = useAuth();
@@ -27,20 +30,24 @@ export default function SignUpPage() {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      console.error("Passwords do not match");
+      toast.error("❌ Passwords do not match");
       return;
     }
 
     setLoading(true);
     try {
       // backend expects: { username, email, password, name }
-      const username = name.trim().replace(/\s+/g, "_").toLowerCase() || email.split("@")[0];
+      const username =
+        name.trim().replace(/\s+/g, "_").toLowerCase() || email.split("@")[0];
+
       await register({ username, email, password, name });
 
-      console.log("Signup successful. Redirecting to login...");
+      toast.success("✅ Signup successful! Redirecting to login...");
       navigate("/login");
     } catch (err) {
-      const errorMsg = err?.response?.data?.message || err?.message || "Signup failed";
+      const errorMsg =
+        err?.response?.data?.message || err?.message || "Signup failed";
+      toast.error(`❌ ${errorMsg}`);
       console.error("Signup error:", errorMsg);
     } finally {
       setLoading(false);
@@ -127,6 +134,9 @@ export default function SignUpPage() {
           </CardFooter>
         </form>
       </Card>
+
+     
+      
     </div>
   );
 }

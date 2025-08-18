@@ -12,6 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
+import { toast } from "sonner";
+import { Toaster } from "../components/ui/sonner"; 
+
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -27,11 +30,12 @@ export default function LoginPage() {
 
     try {
       await login({ email, password });
-      console.log("Login successful. Redirecting to dashboard...");
+      toast.success("✅ Login successful! Redirecting...");
       navigate("/upload");
     } catch (err) {
       const errorMsg = err?.response?.data?.message || err?.message || "Login failed";
-      console.error("Login error:", errorMsg);
+      toast.error(`❌ INVALID EMAIL OR PASSWORD`);
+      // console.error("Login error:", errorMsg);
     } finally {
       setLoading(false);
     }
@@ -93,6 +97,8 @@ export default function LoginPage() {
           </CardFooter>
         </form>
       </Card>
+
+      
     </div>
   );
 }

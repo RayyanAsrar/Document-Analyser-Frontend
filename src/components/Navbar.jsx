@@ -1,4 +1,4 @@
-import { Upload, Settings, User as UserIcon, Moon, Sun } from "lucide-react";
+import { Upload, Settings, User as UserIcon, Moon, Sun, LogOut } from "lucide-react";
 import { Button } from "../components/ui/button";
 import {
   DropdownMenu,
@@ -7,14 +7,25 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import { useTheme } from "../context/ThemeProvider";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Toaster } from "../components/ui/sonner"; // use this instead
 
 export function Navbar() {
   const { theme, setTheme } = useTheme();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
+  const handleLogout = () => {
+    logout();
+    toast.success("✅ You have been logged out");
+    navigate("/login");
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 animate-in slide-in-from-top duration-500">
@@ -27,8 +38,9 @@ export function Navbar() {
           <span className="font-semibold text-lg">Document Analyzer</span>
         </div>
 
-   
+        {/* Right side controls */}
         <div className="flex items-center space-x-2 animate-in slide-in-from-right duration-500">
+          {/* Theme toggle */}
           <Button
             type="button"
             variant="ghost"
@@ -44,6 +56,7 @@ export function Navbar() {
             )}
           </Button>
 
+          {/* Profile menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -65,10 +78,23 @@ export function Navbar() {
                 <UserIcon className="mr-2 h-4 w-4" />
                 Profile
               </DropdownMenuItem>
+
+             
+              {user && (
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="hover:bg-accent transition-colors duration-150 text-red-600"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
+
+
     </nav>
   );
 }
