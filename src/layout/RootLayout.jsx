@@ -7,7 +7,7 @@ export default function RootLayout({ children }) {
     <ThemeProvider defaultTheme="dark" storageKey="document-analyzer-theme">
       <div className="min-h-screen bg-background text-foreground">
         {children}
-        <Toaster position="top-right" richColors closeButton />
+        <Toaster position="top-right"  closeButton />
       </div>
     </ThemeProvider>
   );
