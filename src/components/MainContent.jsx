@@ -12,32 +12,47 @@ export function MainContent() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // 🔥 Core uploader
+  // 🔥 Core upload logic
   const handleFileUpload = async (file) => {
     if (!file) return;
 
+    if (file.type !== "application/pdf") {
+      toast.error("Only PDF files are supported");
+      return;
+    }
+
     setLoading(true);
     try {
-      // Step 1: Upload document
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const uploadRes = await api.post("/documents/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      // Step 1: Ask backend for a signed upload URL
+      const uploadRes = await api.post("/upload", {
+        fileName: file.name,
+        contentType: file.type,
       });
 
-      const document = uploadRes.data.data.document;
-      toast.success(`Uploaded: ${document.name}`);
+      const { url, key } = uploadRes.data.data;
+      if (!url || !key) throw new Error("Invalid upload response");
 
-      // Step 2: Create chat with that document
-      const chatRes = await api.post("/chat/create", {
-        documentId: document._id,
+      // Step 2: Upload file to S3 directly
+      await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type,
+        },
+        body: file,
       });
 
-      const chatId = chatRes.data.data.chat._id;
-      toast.success("Chat created. Redirecting...");
+      // Step 3: Tell backend to process file
+      const processRes = await api.post("/file/process", {
+        key,
+        name: file.name,
+        size: file.size,
+        contentType: file.type,
+      });
 
-      // Step 3: Redirect to chat page
+      const chatId = processRes.data.data.chat._id;
+      toast.success("File uploaded and processed! Redirecting...");
+
+      // Step 4: Redirect to chat page
       navigate(`/chat/${chatId}`);
     } catch (err) {
       toast.error(getApiMessage(err, "Upload failed"));
@@ -66,7 +81,7 @@ export function MainContent() {
         handleFileUpload(files[0]);
       }
     },
-    [handleFileUpload]
+    [] // no deps, handleFileUpload already stable
   );
 
   const handleFileSelect = (e) => {
@@ -113,12 +128,10 @@ export function MainContent() {
             <div className="text-center space-y-2">
               <h3 className="text-xl font-semibold">
                 {isDragOver
-                  ? "Drop your file here"
-                  : "Click to upload, or drag & drop file here"}
+                  ? "Drop your PDF here"
+                  : "Click to upload, or drag & drop PDF here"}
               </h3>
-              <p className="text-muted-foreground">
-                Supports PDF, DOCX, PNG, JPG up to 10MB
-              </p>
+              <p className="text-muted-foreground">Supports PDF up to 10MB</p>
             </div>
           </div>
         </Card>
@@ -126,7 +139,7 @@ export function MainContent() {
         {/* Secondary Note */}
         <div className="flex items-center space-x-2 text-sm text-muted-foreground animate-in slide-in-from-bottom duration-700 delay-300">
           <ArrowDown className="h-4 w-4" />
-          <span>Drag & Drop your file here</span>
+          <span>Drag & Drop your PDF here</span>
         </div>
 
         {/* Upload Button */}
@@ -135,14 +148,14 @@ export function MainContent() {
           disabled={loading}
           className="px-8 py-3 text-lg hover:scale-105 transition-transform animate-in slide-in-from-bottom duration-700 delay-500"
         >
-          {loading ? "Uploading..." : "Upload File"}
+          {loading ? "Uploading..." : "Upload PDF"}
         </Button>
 
         {/* Hidden File Input */}
         <input
           id="file-input"
           type="file"
-          accept=".pdf,.docx,.jpg,.jpeg,.png"
+          accept=".pdf"
           onChange={handleFileSelect}
           className="hidden"
         />
