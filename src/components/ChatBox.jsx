@@ -1,82 +1,92 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
 import { Send, Bot, User, Loader2 } from "lucide-react";
 import { cn } from "../lib/utils";
-
-const dummyMessages = [
-  {
-    id: 1,
-    type: "bot",
-    content:
-      "Hello! I'm ready to help you analyze your documents. Please upload an image to get started.",
-    timestamp: "10:30 AM",
-  },
-  { id: 2, type: "user", content: "I want to extract text from this invoice", timestamp: "10:32 AM" },
-  {
-    id: 3,
-    type: "bot",
-    content:
-      "I can help you extract text from invoices! Please upload the image and I'll analyze it for you.",
-    timestamp: "10:32 AM",
-  },
-];
+import { api, getApiMessage } from "@/lib/apiClient";
+import { toast } from "sonner";
 
 export function ChatBox() {
+  const { chatId } = useParams();
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState(dummyMessages);
+  const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
 
+  // 🛠️ Normalize messages no matter the format
+  const normalizeMessage = (msg) => ({
+    id: msg.id || Date.now(),
+    type: msg.type
+      ? msg.type // already "user" | "bot"
+      : msg.role === "assistant"
+      ? "bot"
+      : "user",
+    content: msg.content,
+    timestamp: msg.timestamp
+      ? msg.timestamp
+      : new Date(msg.createdAt || Date.now()).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+  });
+
+  // 📥 Fetch chat history
+  useEffect(() => {
+    async function fetchChat() {
+      try {
+        const res = await api.get(`/chat/${chatId}`);
+        const formatted = (res.data.data.chat.messages || []).map(normalizeMessage);
+        setMessages(formatted);
+      } catch (err) {
+        toast.error(getApiMessage(err, "Failed to load chat"));
+      }
+    }
+    if (chatId) fetchChat();
+  }, [chatId]);
+
+  // Always scroll to bottom when messages update
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendMessage = () => {
+  // 📨 Handle sending
+  const handleSendMessage = async () => {
     const trimmed = message.trim();
     if (!trimmed) return;
 
-    // Functional update to avoid race conditions
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: prev.length + 1,
-        type: "user",
-        content: trimmed,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      },
-    ]);
+    const userMsg = normalizeMessage({
+      id: Date.now(),
+      role: "user",
+      content: trimmed,
+      createdAt: new Date(),
+    });
 
+    setMessages((prev) => [...prev, userMsg]);
     setMessage("");
     setIsTyping(true);
 
-    // Simulate bot response with typing indicator
-    setTimeout(() => {
-      const botResponses = [
-        "I can see your message. Please upload an image so I can analyze it for you.",
-        "That's interesting! Once you upload a document image, I'll be able to help you with that.",
-        "I'm ready to help! Just drag and drop an image into the upload area and I'll analyze it.",
-        "Great question! Upload your document image and I'll provide detailed analysis.",
-      ];
-      const randomResponse = botResponses[Math.floor(Math.random() * botResponses.length)];
+    try {
+      const res = await api.post(`/questions/${chatId}/ask`, {
+        question: trimmed,
+      });
 
-      // Functional update to keep IDs correct even with rapid sends
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: prev.length + 1,
-          type: "bot",
-          content: randomResponse,
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        },
-      ]);
+      const botMsg = normalizeMessage({
+        id: Date.now() + 1,
+        role: "assistant",
+        content: res.data.data.answer,
+        createdAt: new Date(),
+      });
 
+      setMessages((prev) => [...prev, botMsg]);
+    } catch (err) {
+      toast.error(getApiMessage(err, "Failed to get answer"));
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
-  // Prefer onKeyDown over deprecated onKeyPress
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -85,25 +95,26 @@ export function ChatBox() {
   };
 
   return (
-    
     <div className="w-96 h-full border-l border-border bg-card flex flex-col animate-in slide-in-from-right duration-500">
-      {/* Header - Fixed height */}
+      {/* Header */}
       <div className="p-4 border-b border-border flex-shrink-0">
         <h3 className="font-semibold flex items-center space-x-2">
           <Bot className="h-4 w-4 text-primary" />
           <span>AI Assistant</span>
           <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
         </h3>
-        <p className="text-xs text-muted-foreground mt-1">Online and ready to help</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Online and ready to help
+        </p>
       </div>
 
-      {/* ✅ FIXED: Messages area - Takes remaining space and scrolls internally */}
+      {/* Messages */}
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full p-4">
           <div className="space-y-4">
             {messages.map((msg, index) => (
               <div
-                key={msg.id}
+                key={msg.id || index}
                 className={cn(
                   "flex space-x-2 animate-in slide-in-from-bottom duration-500",
                   msg.type === "user" ? "justify-end" : "justify-start"
@@ -128,7 +139,9 @@ export function ChatBox() {
                   <p
                     className={cn(
                       "text-xs mt-2 opacity-70",
-                      msg.type === "user" ? "text-primary-foreground" : "text-muted-foreground"
+                      msg.type === "user"
+                        ? "text-primary-foreground"
+                        : "text-muted-foreground"
                     )}
                   >
                     {msg.timestamp}
@@ -155,7 +168,9 @@ export function ChatBox() {
                       <div className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
                       <div className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                     </div>
-                    <span className="text-xs text-muted-foreground ml-2">AI is typing...</span>
+                    <span className="text-xs text-muted-foreground ml-2">
+                      AI is typing...
+                    </span>
                   </div>
                 </div>
               </div>
@@ -166,7 +181,7 @@ export function ChatBox() {
         </ScrollArea>
       </div>
 
-      {/* Input - Fixed height */}
+      {/* Input */}
       <div className="p-4 border-t border-border bg-background/50 flex-shrink-0">
         <div className="flex space-x-2">
           <Input
@@ -183,7 +198,11 @@ export function ChatBox() {
             disabled={!message.trim() || isTyping}
             className="hover:scale-110 transition-transform disabled:hover:scale-100"
           >
-            {isTyping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {isTyping ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-2 text-center">

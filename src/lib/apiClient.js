@@ -1,9 +1,10 @@
+// src/lib/apiClient.js
 import axios from "axios";
 import Cookies from "js-cookie";
 
-const COOKIE_OPTIONS = {
+export const COOKIE_OPTIONS = {
   expires: 7,
-  secure: import.meta.env.MODE === "production",
+  secure: import.meta.env.PROD,
   sameSite: "strict",
   path: "/",
 };
@@ -15,28 +16,43 @@ export const setAuthCookies = (token, user) => {
 
 export const getAuthCookies = () => {
   const token = Cookies.get("token");
-  const user = Cookies.get("user");
-  return {
-    token,
-    user: user ? JSON.parse(user) : null,
-  };
+  const userStr = Cookies.get("user");
+  return { token, user: userStr ? JSON.parse(userStr) : null };
 };
 
 export const clearAuthCookies = () => {
-  Cookies.remove("token");
-  Cookies.remove("user");
+  Cookies.remove("token", { path: "/" });
+  Cookies.remove("user", { path: "/" });
 };
 
 export const api = axios.create({
-  baseURL: "https://document-analyser-backend.vercel.app/api", // <-- change later if deployed elsewhere
+  baseURL:
+    import.meta.env.VITE_API_BASE_URL ||
+    "https://document-analyser-backend.vercel.app/api",
   headers: { "Content-Type": "application/json" },
 });
 
-// Add token to every request
-api.interceptors.request.use((config) => {
-  const token = Cookies.get("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Attach token automatically
+api.interceptors.request.use(
+  (config) => {
+    const token = Cookies.get("token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Optional: auto-clear on 401
+api.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    if (error?.response?.status === 401) {
+      clearAuthCookies();
+    }
+    return Promise.reject(error);
   }
-  return config;
-});
+);
+
+// Helper for readable error messages
+export const getApiMessage = (err, fallback = "Something went wrong") =>
+  err?.response?.data?.message || err?.message || fallback;

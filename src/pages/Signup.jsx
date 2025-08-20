@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import { toast } from "sonner";
-import { Toaster } from "../components/ui/sonner"; // use this instead
+import { Toaster } from "../components/ui/sonner"; 
 
 
 export default function SignUpPage() {

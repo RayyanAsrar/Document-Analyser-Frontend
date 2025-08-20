@@ -1,28 +1,38 @@
-import React from 'react'
+import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import ReactDOM from "react-dom/client";
-import Login from './pages/login.jsx'
-import Signup from './pages/signup.jsx'
-import Upload from './pages/Upload.jsx'
-import HomePage from './pages/HomePage.jsx'
-import RootLayout from './layout/RootLayout.jsx';
-import { AuthProvider } from "@/context/AuthContext";
+import Login from "./pages/Login.jsx";
+import Signup from "./pages/Signup.jsx";
+import Upload from "./pages/Upload.jsx";
+import HomePage from "./pages/HomePage.jsx";
+import RootLayout from "./layout/RootLayout.jsx";
+
+// ✅ Import route guards
+import ProtectedRoute from "./routes/ProtectedRoute.jsx";
+import GuestRoute from "./routes/GuestRoute.jsx";
 
 function App() {
   return (
     <BrowserRouter>
-    <AuthProvider>
       <RootLayout>
         <Routes>
+          {/* Public route */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<Login/>} />
-          <Route path="/signup" element={<Signup/>} />
-          <Route path="/upload" element={<Upload/>} />
+
+          {/* Guest-only routes */}
+          <Route element={<GuestRoute />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+          </Route>
+
+          {/* Protected routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/upload" element={<Upload />} />
+           
+          </Route>
         </Routes>
       </RootLayout>
-    </AuthProvider>
     </BrowserRouter>
   );
 }
 
-export default App
+export default App;

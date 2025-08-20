@@ -1,13 +1,52 @@
 import React, { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Upload, ArrowDown } from "lucide-react";
 import { cn } from "../lib/utils";
+import { api, getApiMessage } from "@/lib/apiClient";
+import { toast } from "sonner";
 
-export function MainContent({ onImageUpload }) {
+export function MainContent() {
   const [isDragOver, setIsDragOver] = useState(false);
-  const [uploadedImage, setUploadedImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
+  // 🔥 Core uploader
+  const handleFileUpload = async (file) => {
+    if (!file) return;
+
+    setLoading(true);
+    try {
+      // Step 1: Upload document
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const uploadRes = await api.post("/documents/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const document = uploadRes.data.data.document;
+      toast.success(`Uploaded: ${document.name}`);
+
+      // Step 2: Create chat with that document
+      const chatRes = await api.post("/chat/create", {
+        documentId: document._id,
+      });
+
+      const chatId = chatRes.data.data.chat._id;
+      toast.success("Chat created. Redirecting...");
+
+      // Step 3: Redirect to chat page
+      navigate(`/chat/${chatId}`);
+    } catch (err) {
+      toast.error(getApiMessage(err, "Upload failed"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🎯 Drag & drop handlers
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
     setIsDragOver(true);
@@ -18,85 +57,27 @@ export function MainContent({ onImageUpload }) {
     setIsDragOver(false);
   }, []);
 
-  const handleDrop = useCallback((e) => {
-    e.preventDefault();
-    setIsDragOver(false);
+  const handleDrop = useCallback(
+    (e) => {
+      e.preventDefault();
+      setIsDragOver(false);
+      const files = Array.from(e.dataTransfer?.files || []);
+      if (files.length > 0) {
+        handleFileUpload(files[0]);
+      }
+    },
+    [handleFileUpload]
+  );
 
-    const files = Array.from(e.dataTransfer?.files || []);
-    const imageFile = files.find((file) => file.type && file.type.startsWith("image/"));
-
-    if (imageFile) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const result = ev?.target?.result;
-        if (typeof result === "string") {
-          setUploadedImage(result);
-          // Notify parent component that image was uploaded
-          onImageUpload?.(true);
-        }
-      };
-      reader.readAsDataURL(imageFile);
-    }
-  }, [onImageUpload]);
-
-  const handleFileSelect = useCallback((e) => {
+  const handleFileSelect = (e) => {
     const file = e?.target?.files?.[0];
-    if (file && file.type && file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const result = ev?.target?.result;
-        if (typeof result === "string") {
-          setUploadedImage(result);
-          // Notify parent component that image was uploaded
-          onImageUpload?.(true);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  }, [onImageUpload]);
+    if (file) handleFileUpload(file);
+  };
 
   const handleUploadClick = () => {
     const input = document.getElementById("file-input");
     if (input) input.click();
   };
-
-  const handleNewUpload = () => {
-    setUploadedImage(null);
-    // Notify parent component that image was removed
-    onImageUpload?.(false);
-  };
-
-  if (uploadedImage) {
-    return (
-      <div className="flex-1 p-6 overflow-hidden">
-        <Card className="h-full p-4 animate-in fade-in duration-500 flex flex-col">
-          {/* Header - Fixed height */}
-          <div className="flex items-center justify-between mb-4 flex-shrink-0">
-            <h3 className="text-lg font-semibold">Image Preview</h3>
-            <Button
-              variant="outline"
-              onClick={handleNewUpload}
-              className="hover:scale-105 transition-transform"
-            >
-              Upload New Image
-            </Button>
-          </div>
-          
-          {/* Image Container - Scrollable area with fixed height */}
-          <div className="flex-1 overflow-auto min-h-0">
-            <div className="flex items-start justify-center h-full">
-              <img
-                src={uploadedImage || "/placeholder.svg"}
-                alt="Uploaded document"
-                className="max-w-full h-auto object-contain rounded-lg shadow-lg"
-                style={{ maxHeight: 'none' }} // Allow natural height, container will scroll
-              />
-            </div>
-          </div>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="flex-1 p-6">
@@ -131,30 +112,40 @@ export function MainContent({ onImageUpload }) {
             {/* Main Text */}
             <div className="text-center space-y-2">
               <h3 className="text-xl font-semibold">
-                {isDragOver ? "Drop your image here" : "Click to upload, or drag image here"}
+                {isDragOver
+                  ? "Drop your file here"
+                  : "Click to upload, or drag & drop file here"}
               </h3>
-              <p className="text-muted-foreground">Supports JPG, PNG, GIF up to 10MB</p>
+              <p className="text-muted-foreground">
+                Supports PDF, DOCX, PNG, JPG up to 10MB
+              </p>
             </div>
           </div>
         </Card>
 
-        {/* Secondary Note with Arrow */}
+        {/* Secondary Note */}
         <div className="flex items-center space-x-2 text-sm text-muted-foreground animate-in slide-in-from-bottom duration-700 delay-300">
           <ArrowDown className="h-4 w-4" />
-          <span>Drag + Drop your image here</span>
+          <span>Drag & Drop your file here</span>
         </div>
 
         {/* Upload Button */}
         <Button
           onClick={handleUploadClick}
+          disabled={loading}
           className="px-8 py-3 text-lg hover:scale-105 transition-transform animate-in slide-in-from-bottom duration-700 delay-500"
         >
-          <Upload className="mr-2 h-5 w-5" />
-          Upload Image
+          {loading ? "Uploading..." : "Upload File"}
         </Button>
 
         {/* Hidden File Input */}
-        <input id="file-input" type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+        <input
+          id="file-input"
+          type="file"
+          accept=".pdf,.docx,.jpg,.jpeg,.png"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
       </div>
     </div>
   );
