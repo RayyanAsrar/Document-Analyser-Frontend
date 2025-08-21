@@ -12,10 +12,10 @@ import { cn } from "@/lib/utils";
 export default function ChatPage() {
   const { id } = useParams();
   const [file, setFile] = useState(null);
-  const [summary, setSummary] = useState("");
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
 
   // Fetch chat details
@@ -25,10 +25,30 @@ export default function ChatPage() {
         const res = await api.get(`/chat/${id}`);
         const chat = res.data.data.chat;
         setFile(chat.file);
-        setSummary(chat.file?.summary || "No summary available");
-        setMessages(chat.questions || []);
+
+        // Build initial conversation
+        const initialMessages = [
+          {
+            id: "file-info",
+            role: "user",
+            type: "file",
+            name: chat.file?.name,
+            size: chat.file?.size,
+          },
+          {
+            id: "summary",
+            role: "assistant",
+            type: "summary",
+            answer: chat.file?.summary || "No summary available",
+          },
+          ...(chat.questions || []),
+        ];
+
+        setMessages(initialMessages);
       } catch (err) {
         toast.error(getApiMessage(err, "Failed to load chat"));
+      } finally {
+        setLoading(false);
       }
     }
     if (id) fetchChat();
@@ -64,7 +84,10 @@ export default function ChatPage() {
         role: "assistant",
       };
 
-      setMessages((prev) => [...prev.filter((m) => m.id !== userMsg.id), botMsg]);
+      setMessages((prev) => [
+        ...prev.filter((m) => m.id !== userMsg.id),
+        botMsg,
+      ]);
     } catch (err) {
       toast.error(getApiMessage(err, "Failed to get answer"));
     } finally {
@@ -86,65 +109,99 @@ export default function ChatPage() {
 
       {/* Main Chat Section */}
       <div className="flex-1 flex flex-col">
-        {/* File Header */}
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <FileIcon className="h-6 w-6 text-primary" />
-            <div>
-              <p className="font-medium">{file?.name || "Untitled Document"}</p>
-              <p className="text-xs text-muted-foreground">
-                {(file?.size / 1024 / 1024).toFixed(2)} MB
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Summary */}
-        <div className="p-4 border-b border-border bg-muted/30">
-          <h3 className="font-semibold mb-2">Summary</h3>
-          <p className="text-sm text-muted-foreground">{summary}</p>
-        </div>
-
-        {/* Messages */}
-        <ScrollArea className="flex-1 p-6">
+        {/* Chat Area */}
+        <ScrollArea className="flex-1 px-6 py-4">
           <div className="space-y-6">
-            {messages.map((msg, index) => (
-              <div
-                key={msg.id || index}
-                className={cn(
-                  "flex space-x-2 animate-in slide-in-from-bottom duration-500",
-                  msg.role === "user" ? "justify-end" : "justify-start"
-                )}
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                {msg.role === "assistant" && (
-                  <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                    <Bot className="h-4 w-4 text-primary-foreground" />
-                  </div>
-                )}
+            {loading ? (
+              <>
+                <div className="animate-pulse h-6 w-1/3 bg-muted rounded-md" />
+                <div className="animate-pulse h-6 w-2/3 bg-muted rounded-md" />
+              </>
+            ) : (
+              messages.map((msg, index) => {
+                if (msg.type === "file") {
+                  return (
+                    <div
+                      key={msg.id}
+                      className="flex justify-end animate-in slide-in-from-bottom"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <div className="max-w-[70%] rounded-xl p-4 bg-primary text-primary-foreground shadow-md">
+                        <div className="flex items-center space-x-3">
+                          <FileIcon className="h-5 w-5" />
+                          <div>
+                            <p className="font-medium truncate">
+                              {msg.name || "Untitled Document"}
+                            </p>
+                            <p className="text-xs opacity-80">
+                              {msg.size
+                                ? (msg.size / 1024 / 1024).toFixed(2) + " MB"
+                                : "—"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
 
-                <div
-                  className={cn(
-                    "max-w-[70%] rounded-lg p-3 text-sm shadow-sm",
-                    msg.role === "user"
-                      ? "bg-primary text-primary-foreground rounded-br-sm"
-                      : "bg-muted rounded-bl-sm"
-                  )}
-                >
-                  {msg.role === "user" ? (
-                    <p>{msg.question}</p>
-                  ) : (
-                    <p>{msg.answer}</p>
-                  )}
-                </div>
+                if (msg.type === "summary") {
+                  return (
+                    <div
+                      key={msg.id}
+                      className="flex justify-start animate-in slide-in-from-bottom"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <div className="max-w-[70%] rounded-xl p-4 bg-card border border-border shadow-sm">
+                        <h3 className="font-semibold mb-2">Summary</h3>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          {msg.answer}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
 
-                {msg.role === "user" && (
-                  <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-                    <User className="h-4 w-4 text-secondary-foreground" />
+                // Normal chat bubbles
+                return (
+                  <div
+                    key={msg.id || index}
+                    className={cn(
+                      "flex space-x-2 animate-in slide-in-from-bottom duration-500",
+                      msg.role === "user" ? "justify-end" : "justify-start"
+                    )}
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    {msg.role === "assistant" && (
+                      <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                        <Bot className="h-4 w-4 text-primary-foreground" />
+                      </div>
+                    )}
+
+                    <div
+                      className={cn(
+                        "max-w-[70%] rounded-xl p-4 text-sm shadow-md",
+                        msg.role === "user"
+                          ? "bg-primary text-primary-foreground rounded-br-sm"
+                          : "bg-card border border-border rounded-bl-sm"
+                      )}
+                    >
+                      {msg.role === "user" ? (
+                        <p>{msg.question}</p>
+                      ) : (
+                        <p>{msg.answer}</p>
+                      )}
+                    </div>
+
+                    {msg.role === "user" && (
+                      <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                        <User className="h-4 w-4 text-secondary-foreground" />
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
+                );
+              })
+            )}
 
             {isTyping && (
               <div className="flex space-x-2 justify-start animate-in slide-in-from-bottom duration-300">
@@ -152,7 +209,17 @@ export default function ChatPage() {
                   <Bot className="h-4 w-4 text-primary-foreground" />
                 </div>
                 <div className="bg-muted rounded-lg rounded-bl-sm p-3 text-sm shadow-sm">
-                  <p className="text-muted-foreground">AI is typing...</p>
+                  <div className="flex space-x-1">
+                    <div className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce" />
+                    <div
+                      className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"
+                      style={{ animationDelay: "150ms" }}
+                    />
+                    <div
+                      className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"
+                      style={{ animationDelay: "300ms" }}
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -162,7 +229,7 @@ export default function ChatPage() {
         </ScrollArea>
 
         {/* Input */}
-        <div className="p-4 border-t border-border bg-background/50">
+        <div className="p-4 border-t border-border bg-background/80 backdrop-blur-md shadow-lg">
           <div className="flex space-x-2">
             <Input
               placeholder="Ask about your document..."
