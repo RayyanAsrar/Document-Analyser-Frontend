@@ -13,14 +13,14 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import { toast } from "sonner";
-import { Toaster } from "../components/ui/sonner"; 
-
+import { Toaster } from "../components/ui/sonner";
 
 export default function SignUpPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -36,11 +36,17 @@ export default function SignUpPage() {
 
     setLoading(true);
     try {
-      // backend expects: { username, email, password, name }
-      const username =
-        name.trim().replace(/\s+/g, "_").toLowerCase() || email.split("@")[0];
+      // Use the actual username from state, or generate from name/email as fallback
+      const finalUsername = username.trim() || 
+        name.trim().replace(/\s+/g, "_").toLowerCase() || 
+        email.split("@")[0];
 
-      await register({ username, email, password, name });
+      await register({ 
+        username: finalUsername, 
+        name, 
+        email, 
+        password 
+      });
 
       toast.success("✅ Signup successful! Redirecting to login...");
       navigate("/login");
@@ -56,7 +62,7 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 animate-in fade-in duration-700">
-      <Card className="w-full max-w-md animate-in slide-in-from-bottom duration-500 delay-200 ">
+      <Card className="w-full max-w-md animate-in slide-in-from-bottom duration-500 delay-200">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Create account</CardTitle>
           <CardDescription className="text-center">
@@ -77,6 +83,23 @@ export default function SignUpPage() {
                 required
               />
             </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="Choose a username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value.slice(0, 16))} // limit 16 chars
+                className="transition-all duration-200 focus:scale-[1.02]"
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                3-16 characters. Will be auto-generated from name if left empty.
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -89,18 +112,22 @@ export default function SignUpPage() {
                 required
               />
             </div>
+            
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Create a password"
+                placeholder="Create a password (6-16 characters)"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value.slice(0, 16))}
                 className="transition-all duration-200 focus:scale-[1.02]"
                 required
+                minLength={6}
+                maxLength={16}
               />
             </div>
+            
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input
@@ -114,6 +141,7 @@ export default function SignUpPage() {
               />
             </div>
           </CardContent>
+          
           <CardFooter className="flex flex-col space-y-4">
             <Button
               type="submit"
@@ -134,9 +162,6 @@ export default function SignUpPage() {
           </CardFooter>
         </form>
       </Card>
-
-     
-      
     </div>
   );
 }
