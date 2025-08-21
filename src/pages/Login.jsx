@@ -34,7 +34,7 @@ export default function LoginPage() {
       navigate("/upload");
     } catch (err) {
       const errorMsg = err?.response?.data?.message || err?.message || "Login failed";
-      toast.error(`❌ INVALID EMAIL OR PASSWORD`);
+      toast.error(errorMsg);
       // console.error("Login error:", errorMsg);
     } finally {
       setLoading(false);
