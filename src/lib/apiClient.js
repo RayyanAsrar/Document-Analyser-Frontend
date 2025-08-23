@@ -9,20 +9,17 @@ export const COOKIE_OPTIONS = {
   path: "/",
 };
 
-export const setAuthCookies = (token, user) => {
+export const setAuthCookies = (token) => {
   Cookies.set("token", token, COOKIE_OPTIONS);
-  Cookies.set("user", JSON.stringify(user), COOKIE_OPTIONS);
 };
 
 export const getAuthCookies = () => {
   const token = Cookies.get("token");
-  const userStr = Cookies.get("user");
-  return { token, user: userStr ? JSON.parse(userStr) : null };
+  return token;
 };
 
 export const clearAuthCookies = () => {
   Cookies.remove("token", { path: "/" });
-  Cookies.remove("user", { path: "/" });
 };
 
 export const api = axios.create({

@@ -7,15 +7,15 @@ import CustomAvatar from "./CustomAvatar";
 // import useStore from "@/lib/store";
 import Cookie from "js-cookie";
 import { useNavigate } from "react-router-dom";
-import { getAuthCookies } from "../lib/apiClient";
+// import { getAuthCookies } from "../lib/apiClient";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeProvider";
 
 const UserMenu = () => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const { user } = getAuthCookies();
-  const { logout } = useAuth();
+  // const { user } = getAuthCookies();
+  const { logout, user } = useAuth();
   const { theme, setTheme } = useTheme();
 
   const handleLogout = () => {

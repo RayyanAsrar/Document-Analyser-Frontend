@@ -125,11 +125,11 @@ const DashboardLayout = () => {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-          <Separator />
         </SidebarContent>
 
         {/* Footer */}
         <SidebarFooter className="sticky bottom-0 z-20 p-4">
+          <Separator />
           <SidebarMenuButton
             tooltip="Logout"
             onClick={handleLogout}
