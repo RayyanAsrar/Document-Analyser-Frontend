@@ -124,7 +124,7 @@ const ChatPage = () => {
   return (
     <section className="flex flex-col bg-transparent max-h-[calc(100vh-85px)] overflow-hidden">
       {/* Scrollable messages area */}
-      <div className="flex-1 p-4 gap-6 overflow-y-auto max-h-[calc(100vh-50px)]">
+      <div className="flex-1 p-4 gap-6 overflow-y-auto mobile-scrollbar max-h-[calc(100vh-50px)]">
         {/* File info (separate block) */}
         <div className="flex items-center justify-end mb-4">
           <div className="flex items-center gap-3 rounded-lg p-3 w-[280px] bg-primary">

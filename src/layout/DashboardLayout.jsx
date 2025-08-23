@@ -41,11 +41,8 @@ const DashboardLayout = () => {
     fetchChats();
   }, []);
 
-  // Handle Logout with confirmation
   const handleLogout = () => {
-    if (window.confirm("Are you sure you want to logout?")) {
-      logout();
-    }
+    logout();
   };
 
   return (

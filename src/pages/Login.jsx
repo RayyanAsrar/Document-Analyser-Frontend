@@ -1,9 +1,9 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { LoaderCircle } from "lucide-react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
 import {
   Card,
   CardContent,
@@ -12,8 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
-import { toast } from "sonner";
-import { Toaster } from "../components/ui/sonner"; 
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 
 
 export default function LoginPage() {
@@ -83,16 +83,20 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full hover:scale-105 transition-all duration-200 hover:shadow-lg"
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? (
+                <LoaderCircle className="w-5 h-5 animate-spin" />
+              ) : (
+                "Sign In"
+              )}
             </Button>
             <p className="text-sm text-muted-foreground text-center">
               Don&apos;t have an account?{" "}
-              <a
-                href="/signup"
+              <Link
+                to="/signup"
                 className="text-primary hover:underline transition-all duration-200 hover:scale-105 inline-block"
               >
                 Sign up
-              </a>
+              </Link>
             </p>
           </CardFooter>
         </form>
