@@ -9,6 +9,7 @@ import SignUpPage from "../pages/Signup";
 import UploadPage from "../pages/Upload";
 import ChatPage from "../pages/ChatPage";
 import CollectionPage from "../pages/CollectionPage";
+import AuthLayout from "../layout/AuthLayout";
 
 const AppRouter = () => {
   return (
@@ -17,7 +18,7 @@ const AppRouter = () => {
       <Route path="/" element={<HomePage />} />
 
       {/* Guest-only routes */}
-      <Route element={<GuestRoute />}>
+      <Route element={<GuestRoute><AuthLayout /></GuestRoute>}>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
       </Route>

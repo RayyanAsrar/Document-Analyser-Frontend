@@ -63,94 +63,97 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 animate-in fade-in duration-700">
-      <Card className="w-full max-w-md animate-in slide-in-from-bottom duration-500 delay-200">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
+    <div className="min-h-[70vh] flex items-center justify-center p-4">
+      <Card className="w-full max-w-md rounded-2xl shadow-lg border border-border bg-card/80 backdrop-blur-md">
+        <CardHeader className="space-y-2 pb-0">
+          <CardTitle className="text-2xl font-bold text-center tracking-tight">
             Create account
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="text-center text-base text-muted-foreground">
             Enter your information to create your account
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5 pt-2 pb-3">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name" className="font-medium">
+                Full Name
+              </Label>
               <Input
                 id="name"
                 type="text"
                 placeholder="Enter your full name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="transition-all duration-200 focus:scale-[1.02]"
                 required
+                className="rounded-lg border-border focus:ring-2 focus:ring-primary/30"
               />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username" className="font-medium">
+                Username
+              </Label>
               <Input
                 id="username"
                 type="text"
                 placeholder="Choose a username"
                 value={username}
-                onChange={(e) => setUsername(e.target.value.slice(0, 16))} // limit 16 chars
-                className="transition-all duration-200 focus:scale-[1.02]"
+                onChange={(e) => setUsername(e.target.value.slice(0, 16))}
                 required
+                className="rounded-lg border-border focus:ring-2 focus:ring-primary/30"
               />
-              <p className="text-xs text-muted-foreground">
-                3-16 characters. Will be auto-generated from name if left empty.
-              </p>
+              <p className="text-xs text-muted-foreground">3-16 characters.</p>
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="font-medium">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="transition-all duration-200 focus:scale-[1.02]"
                 required
+                className="rounded-lg border-border focus:ring-2 focus:ring-primary/30"
               />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="font-medium">
+                Password
+              </Label>
               <Input
                 id="password"
                 type="password"
                 placeholder="Create a password (6-16 characters)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value.slice(0, 16))}
-                className="transition-all duration-200 focus:scale-[1.02]"
                 required
                 minLength={6}
                 maxLength={16}
+                className="rounded-lg border-border focus:ring-2 focus:ring-primary/30"
               />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword" className="font-medium">
+                Confirm Password
+              </Label>
               <Input
                 id="confirmPassword"
                 type="password"
                 placeholder="Confirm your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="transition-all duration-200 focus:scale-[1.02] mb-4"
                 required
+                className="rounded-lg border-border focus:ring-2 focus:ring-primary/30"
               />
             </div>
           </CardContent>
-
-          <CardFooter className="flex flex-col space-y-4">
+          <CardFooter className="flex flex-col space-y-4 pt-0">
             <Button
               type="submit"
               disabled={loading}
-              className="w-full hover:scale-105 transition-all duration-200 hover:shadow-lg"
+              className="w-full rounded-lg font-semibold text-base"
             >
               {loading ? (
                 <LoaderCircle className="w-5 h-5 animate-spin" />
@@ -162,7 +165,7 @@ export default function SignUpPage() {
               Already have an account?{" "}
               <Link
                 to="/login"
-                className="text-primary hover:underline transition-all duration-200 hover:scale-105 inline-block"
+                className="text-primary hover:underline font-medium"
               >
                 Sign in
               </Link>

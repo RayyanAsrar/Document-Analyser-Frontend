@@ -5,6 +5,7 @@ import {
   Moon,
   Sun,
   LogOut,
+  LayoutDashboard,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import {
@@ -55,7 +56,7 @@ export function Navbar() {
         </div>
 
         {/* Right side controls */}
-        <div className="flex items-center space-x-2 animate-in slide-in-from-right duration-500">
+        <div className="flex items-center space-x-2">
           {/* Theme toggle */}
           <Button
             type="button"
@@ -63,12 +64,12 @@ export function Navbar() {
             size="icon"
             onClick={toggleTheme}
             aria-label="Toggle theme"
-            className="hover:scale-110 transition-all duration-200 hover:bg-accent hover:shadow-md"
+            className=""
           >
             {theme === "dark" ? (
-              <Sun className="h-4 w-4 rotate-0 scale-100 transition-all duration-300" />
+              <Sun className="h-5 w-5 text-yellow-400" />
             ) : (
-              <Moon className="h-4 w-4 rotate-0 scale-100 transition-all duration-300" />
+              <Moon className="h-5 w-5 text-blue-600" />
             )}
           </Button>
 
@@ -79,21 +80,27 @@ export function Navbar() {
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="hover:scale-110 transition-all duration-200 hover:bg-accent hover:shadow-md"
                   aria-label="Open profile menu"
                 >
-                  <CustomAvatar src={user?.profileImage} alt={user?.name} name={user?.name}  />
+                  <CustomAvatar
+                    src={user?.profileImage}
+                    alt={user?.name}
+                    name={user?.name}
+                  />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="animate-in slide-in-from-top-2 duration-200"
-              >
-                <DropdownMenuItem className="hover:bg-accent transition-colors duration-150">
+              <DropdownMenuContent align="end">
+                <Link to={"/upload"}>
+                <DropdownMenuItem>
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Dashboard
+                </DropdownMenuItem>
+                </Link>
+                <DropdownMenuItem>
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-accent transition-colors duration-150">
+                <DropdownMenuItem>
                   <UserIcon className="mr-2 h-4 w-4" />
                   Profile
                 </DropdownMenuItem>
@@ -110,7 +117,13 @@ export function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <h1>Login</h1>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/login")}
+            >
+              Login
+            </Button>
           )}
         </div>
       </div>
