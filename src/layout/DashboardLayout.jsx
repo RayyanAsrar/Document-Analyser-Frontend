@@ -31,7 +31,6 @@ const DashboardLayout = () => {
   const [chats, setChats] = useState([]);
   const token = Cookie.get("token");
 
-  // Fetch chats on mount
   useEffect(() => {
     const fetchChats = async () => {
       try {
@@ -54,12 +53,10 @@ const DashboardLayout = () => {
 
   return (
     <SidebarProvider open={open} onOpenChange={setOpen}>
-      {/* Sidebar */}
       <AppSidebar>
         <SidebarContent>
-          {/* Fixed Header */}
           <SidebarHeader className="sticky top-0 z-30 bg-background pb-2">
-            <div className="flex items-center space-x-2 animate-in slide-in-from-left duration-500">
+            {/* <div className="flex items-center space-x-2 animate-in slide-in-from-left duration-500">
               <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center hover:scale-110 transition-transform duration-200">
                 <span className="text-primary-foreground font-bold text-sm">
                   DA
@@ -68,11 +65,23 @@ const DashboardLayout = () => {
               <span className="font-semibold text-lg truncate">
                 Document Analyzer
               </span>
+            </div> */}
+
+            <div className="flex justify-center items-center">
+              <Link to="/">
+                <img
+                  className="hidden dark:block w-40 text-center"
+                  src="/OmniView AI-Dark.png"
+                />
+                <img
+                  className="dark:hidden block w-40 text-center"
+                  src="/OmniView AI-Light.png"
+                />
+              </Link>
             </div>
           </SidebarHeader>
           <Separator />
 
-          {/* Main Buttons */}
           <SidebarGroup>
             <SidebarGroupContent className="flex flex-col gap-2">
               <Link to="/upload">
@@ -84,7 +93,7 @@ const DashboardLayout = () => {
                 </SidebarMenuButton>
               </Link>
 
-              <Link to="/upload">
+              <Link to="/collection">
                 <SidebarMenuButton
                   tooltip="Collection of Uploaded Files"
                   className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg cursor-pointer font-semibold hover:bg-muted transition-colors"
@@ -95,7 +104,6 @@ const DashboardLayout = () => {
             </SidebarGroupContent>
           </SidebarGroup>
 
-          {/* Chats List */}
           <SidebarGroup>
             <SidebarGroupLabel className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">
               Chats
@@ -132,7 +140,6 @@ const DashboardLayout = () => {
           </SidebarGroup>
         </SidebarContent>
 
-        {/* Footer */}
         <SidebarFooter className="sticky bottom-0 z-20 p-4">
           <Separator />
           <SidebarMenuButton
@@ -147,7 +154,6 @@ const DashboardLayout = () => {
         </SidebarFooter>
       </AppSidebar>
 
-      {/* Main Content */}
       <SidebarInset>
         <div className="flex justify-between items-center p-3 border-b border-border/50">
           <SidebarTrigger

@@ -8,6 +8,7 @@ import LoginPage from "../pages/Login";
 import SignUpPage from "../pages/Signup";
 import UploadPage from "../pages/Upload";
 import ChatPage from "../pages/ChatPage";
+import CollectionPage from "../pages/CollectionPage";
 
 const AppRouter = () => {
   return (
@@ -31,6 +32,7 @@ const AppRouter = () => {
       >
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/chat/:id" element={<ChatPage />} />
+        <Route path="/collection" element={<CollectionPage />} />
       </Route>
     </Routes>
   );

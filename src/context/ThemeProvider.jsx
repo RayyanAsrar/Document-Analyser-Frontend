@@ -1,6 +1,6 @@
-import React from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
-const ThemeProviderContext = React.createContext({
+const ThemeProviderContext = createContext({
   theme: "system",
   setTheme: () => {},
 });
@@ -11,19 +11,21 @@ export function ThemeProvider({
   storageKey = "vite-ui-theme",
   ...props
 }) {
-  const [theme, setThemeState] = React.useState(() => {
+  const [theme, setThemeState] = useState(() => {
     // Initialize from localStorage if available (safe in browsers)
     if (typeof window === "undefined") return defaultTheme;
     try {
       const stored = localStorage.getItem(storageKey);
-      if (stored === "dark" || stored === "light" || stored === "system") return stored;
+      if (stored === "dark" || stored === "light" || stored === "system")
+        return stored;
     } catch (e) {
       // ignore localStorage errors (e.g. privacy mode)
+      console.log(e);
     }
     return defaultTheme;
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof window === "undefined") return;
 
     const root = window.document.documentElement;
@@ -32,7 +34,9 @@ export function ThemeProvider({
       root.classList.remove("light", "dark");
 
       if (t === "system") {
-        const systemIsDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const systemIsDark = window.matchMedia(
+          "(prefers-color-scheme: dark)"
+        ).matches;
         root.classList.add(systemIsDark ? "dark" : "light");
       } else {
         root.classList.add(t);
@@ -70,6 +74,7 @@ export function ThemeProvider({
       localStorage.setItem(storageKey, newTheme);
     } catch (e) {
       // ignore localStorage errors
+      console.log(e);
     }
     setThemeState(newTheme);
   };
@@ -84,7 +89,7 @@ export function ThemeProvider({
 }
 
 export function useTheme() {
-  const context = React.useContext(ThemeProviderContext);
+  const context = useContext(ThemeProviderContext);
   if (!context) throw new Error("useTheme must be used within a ThemeProvider");
   return context;
 }
