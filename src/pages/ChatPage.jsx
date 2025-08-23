@@ -227,9 +227,10 @@ const ChatPage = () => {
             questions.map((q) => (
               <div key={q._id} className="flex flex-col gap-2 max-w-full">
                 {/* User question */}
+                {/* User question */}
                 <div className="flex items-end justify-end gap-2">
                   <div className="flex flex-col items-end max-w-[80%]">
-                    <div className="bg-primary/20 px-3 py-2 rounded-lg break-words">
+                    <div className="bg-white text-black px-3 py-2 rounded-lg shadow-md break-words">
                       {q.question}
                     </div>
                     <span className="text-xs text-muted-foreground mt-1">
@@ -242,6 +243,8 @@ const ChatPage = () => {
                     <User className="w-5 h-5 text-primary-foreground" />
                   </div>
                 </div>
+
+
 
                 {/* AI answer */}
                 <div className="flex items-start gap-2">
