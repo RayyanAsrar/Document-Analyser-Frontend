@@ -2,66 +2,99 @@ import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { Upload, ArrowDown } from "lucide-react";
+import { Upload, FileText, X, LoaderCircle } from "lucide-react";
 import { cn } from "../lib/utils";
-import { api, getApiMessage } from "@/lib/apiClient";
+import api, { getApiMessage } from "@/lib/apiClient";
 import { toast } from "sonner";
+import Cookie from "js-cookie";
+import { useChats } from "../context/ChatContext";
 
 export function MainContent() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
   const navigate = useNavigate();
+  const token = Cookie.get("token");
+  const { addChats } = useChats();
 
-  // 🔥 Core upload logic
-  const handleFileUpload = async (file) => {
-    if (!file) return;
+  // 🔥 Upload logic
+  const handleFileUpload = async () => {
+    if (!selectedFile) return;
 
-    if (file.type !== "application/pdf") {
-      toast.error("Only PDF files are supported");
-      return;
-    }
-
+    const file = selectedFile;
     setLoading(true);
     try {
-      // Step 1: Ask backend for a signed upload URL
-      const uploadRes = await api.post("/upload", {
-        fileName: file.name,
-        contentType: file.type,
-      });
+      const uploadRes = await api.post(
+        "/upload",
+        {
+          fileName: file.name,
+          contentType: file.type,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const { url, key } = uploadRes.data.data;
-      if (!url || !key) throw new Error("Invalid upload response");
 
-      // Step 2: Upload file to S3 directly
       await fetch(url, {
         method: "PUT",
-        headers: {
-          "Content-Type": file.type,
-        },
+        headers: { "Content-Type": file.type },
         body: file,
       });
 
-      // Step 3: Tell backend to process file
-      const processRes = await api.post("/file/process", {
-        key,
-        name: file.name,
-        size: file.size,
-        contentType: file.type,
-      });
+      const { data } = await api.post(
+        "/file/process",
+        {
+          key,
+          name: file.name,
+          size: file.size,
+          contentType: file.type,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      const chatId = processRes.data.data.chat._id;
-      toast.success("File uploaded and processed! Redirecting...");
-
-      // Step 4: Redirect to chat page
+      const { chat } = data.data;
+      const message = data.message;
+      console.log(chat);
+      addChats({...chat, file: {name: file.name}});
+      const chatId = chat?._id;
+      toast.success(message);
       navigate(`/chat/${chatId}`);
     } catch (err) {
+      console.log("error");
       toast.error(getApiMessage(err, "Upload failed"));
     } finally {
       setLoading(false);
     }
   };
 
-  // 🎯 Drag & drop handlers
+  // 🎯 File selection
+  const handleFileSelect = (e) => {
+    const file = e?.target?.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      toast.error("Only PDF files are supported");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File must be under 10MB");
+      return;
+    }
+
+    setSelectedFile(file);
+  };
+
+  const handleRemoveFile = () => setSelectedFile(null);
+
+  // 🎯 Drag & drop
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
     setIsDragOver(true);
@@ -72,22 +105,12 @@ export function MainContent() {
     setIsDragOver(false);
   }, []);
 
-  const handleDrop = useCallback(
-    (e) => {
-      e.preventDefault();
-      setIsDragOver(false);
-      const files = Array.from(e.dataTransfer?.files || []);
-      if (files.length > 0) {
-        handleFileUpload(files[0]);
-      }
-    },
-    [] // no deps, handleFileUpload already stable
-  );
-
-  const handleFileSelect = (e) => {
-    const file = e?.target?.files?.[0];
-    if (file) handleFileUpload(file);
-  };
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = Array.from(e.dataTransfer?.files || []);
+    if (files.length > 0) handleFileSelect({ target: { files } });
+  }, []);
 
   const handleUploadClick = () => {
     const input = document.getElementById("file-input");
@@ -95,24 +118,27 @@ export function MainContent() {
   };
 
   return (
-    <div className="flex-1 p-6">
-      <div className="h-full flex flex-col items-center justify-center space-y-6 animate-in fade-in duration-500">
-        <Card
-          className={cn(
-            "w-full max-w-2xl h-96 border-2 border-dashed transition-all duration-300 cursor-pointer group",
-            isDragOver
-              ? "border-primary bg-primary/5 shadow-lg shadow-primary/20"
-              : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/20 hover:shadow-md"
-          )}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onClick={handleUploadClick}
-          role="button"
-          tabIndex={0}
-        >
-          <div className="h-full flex flex-col items-center justify-center space-y-4 p-8">
-            {/* Upload Icon */}
+    <div className="flex-1 p-6 flex flex-col items-center justify-center space-y-6">
+      {/* Primary Button */}
+
+      {/* Drag & Drop / File Info Card */}
+      <Card
+        className={cn(
+          "w-full max-w-2xl h-72 border-2 border-dashed transition-all duration-300 flex items-center justify-center cursor-pointer group p-0 md:px-2",
+          isDragOver
+            ? "border-primary bg-primary/5 shadow-lg shadow-primary/20"
+            : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/20 hover:shadow-md"
+        )}
+        onDragOver={!selectedFile ? handleDragOver : undefined}
+        onDragLeave={!selectedFile ? handleDragLeave : undefined}
+        onDrop={!selectedFile ? handleDrop : undefined}
+        onClick={!selectedFile ? handleUploadClick : undefined}
+        role="button"
+        tabIndex={0}
+      >
+        {!selectedFile ? (
+          // Drag & Drop View
+          <div className="flex flex-col items-center justify-center space-y-4 p-8 text-center">
             <div
               className={cn(
                 "h-16 w-16 rounded-full flex items-center justify-center transition-all duration-300",
@@ -123,43 +149,59 @@ export function MainContent() {
             >
               <Upload className="h-8 w-8" />
             </div>
-
-            {/* Main Text */}
-            <div className="text-center space-y-2">
-              <h3 className="text-xl font-semibold">
-                {isDragOver
-                  ? "Drop your PDF here"
-                  : "Click to upload, or drag & drop PDF here"}
-              </h3>
-              <p className="text-muted-foreground">Supports PDF up to 10MB</p>
-            </div>
+            <h3 className="text-xl font-semibold">
+              {isDragOver ? "Drop your PDF here" : "Click or drag & drop PDF"}
+            </h3>
+            <p className="text-muted-foreground">Supports PDF up to 10MB</p>
           </div>
-        </Card>
+        ) : (
+          // File Info View
+          <div className="flex items-center justify-between w-full max-w-md p-4 border rounded-lg shadow-sm bg-muted/30">
+            <div className="flex items-center gap-3">
+              <FileText className="h-6 w-6 text-primary" />
+              <div>
+                <p className="font-medium">{selectedFile.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleRemoveFile}
+              className="p-1 rounded-full hover:bg-muted text-muted-foreground hover:text-red-500 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        )}
+      </Card>
 
-        {/* Secondary Note */}
-        <div className="flex items-center space-x-2 text-sm text-muted-foreground animate-in slide-in-from-bottom duration-700 delay-300">
-          <ArrowDown className="h-4 w-4" />
-          <span>Drag & Drop your PDF here</span>
-        </div>
-
-        {/* Upload Button */}
+      {selectedFile && (
         <Button
-          onClick={handleUploadClick}
-          disabled={loading}
-          className="px-8 py-3 text-lg hover:scale-105 transition-transform animate-in slide-in-from-bottom duration-700 delay-500"
+          onClick={selectedFile ? handleFileUpload : handleUploadClick}
+          disabled={loading || (!selectedFile && !loading)}
+          className="px-8 py-3 text-lg hover:scale-105 transition-transform animate-in fade-in duration-500"
         >
-          {loading ? "Uploading..." : "Upload PDF"}
+          {loading ? (
+            <>
+              Uploading... <LoaderCircle className="w-5 h-5 animate-spin" />
+            </>
+          ) : selectedFile ? (
+            "Upload PDF"
+          ) : (
+            "Select PDF"
+          )}
         </Button>
+      )}
 
-        {/* Hidden File Input */}
-        <input
-          id="file-input"
-          type="file"
-          accept=".pdf"
-          onChange={handleFileSelect}
-          className="hidden"
-        />
-      </div>
+      {/* Hidden Input */}
+      <input
+        id="file-input"
+        type="file"
+        accept=".pdf"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
     </div>
   );
 }

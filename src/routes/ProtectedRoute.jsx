@@ -2,14 +2,7 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "../components/Navbar";
 
-export default function ProtectedRoute() {
-  const { user } = useAuth();
-  return user ? (
-    <>
-      <Navbar />
-      <Outlet />
-    </>
-  ) : (
-    <Navigate to="/login" replace />
-  );
+export default function ProtectedRoute({ children }) {
+  const { isLoggedIn } = useAuth();
+  return isLoggedIn ? children : <Navigate to="/login" replace />;
 }

@@ -1,40 +1,42 @@
-import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./pages/Login.jsx";
-import Signup from "./pages/Signup.jsx";
-import Upload from "./pages/Upload.jsx";
-import HomePage from "./pages/HomePage.jsx";
-import ChatPage from "./pages/ChatPage.jsx";
-import RootLayout from "./layout/RootLayout.jsx";
-
-// ✅ Import route guards
-import ProtectedRoute from "./routes/ProtectedRoute.jsx";
-import GuestRoute from "./routes/GuestRoute.jsx";
+import { useEffect } from "react";
+import AppRouter from "./routes/AppRouter.jsx";
+import Cookie from "js-cookie";
+import { useAuth } from "./context/AuthContext.jsx";
+import api from "./lib/apiClient.js";
+import Loader from "./components/Laoder.jsx";
 
 function App() {
-  return (
-    <BrowserRouter>
-      <RootLayout>
-        <Routes>
-          {/* Public route */}
-          <Route path="/" element={<HomePage />} />
+  const { logout, login, loading, setLoading } = useAuth();
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const token = Cookie.get("token");
+      try {
+        if (!token) {
+          logout();
+          Cookie.remove("token");
+          return;
+        }
 
-          {/* Guest-only routes */}
-          <Route element={<GuestRoute />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-          </Route>
+        const { data } = await api.get("/user/current", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        login(data.data);
+      } catch (error) {
+        console.error("Error fetching current user:", error, loading);
+        if (error.response?.status === 401) {
+          logout();
+          Cookie.remove("token");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    getCurrentUser();
+  }, [loading, login, logout, setLoading]);
 
-          {/* Protected routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/upload" element={<Upload />} />
-            <Route path="/chat/:id" element={<ChatPage />} />
-           
-          </Route>
-        </Routes>
-      </RootLayout>
-    </BrowserRouter>
-  );
+  return loading ? <Loader /> : <AppRouter />;
 }
 
 export default App;

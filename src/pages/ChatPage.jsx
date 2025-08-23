@@ -1,262 +1,310 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
-import { Sidebar } from "@/components/Sidebar";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileIcon, Send, Bot, User, Loader2 } from "lucide-react";
-import { api, getApiMessage } from "@/lib/apiClient";
+import React, { useCallback, useEffect, useState, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import api, { getApiMessage } from "../lib/apiClient";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import {
+  FilesIcon,
+  Send,
+  Loader2,
+  Bot,
+  User,
+  MessagesSquareIcon,
+} from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import Cookie from "js-cookie";
 
-export default function ChatPage() {
+// Utility to format file size
+const formatFileSize = (bytes) => {
+  if (!bytes && bytes !== 0) return "-";
+  const mb = bytes / (1024 * 1024);
+  return mb < 1 ? `${(bytes / 1024).toFixed(1)} KB` : `${mb.toFixed(2)} MB`;
+};
+
+// Typing indicator component (animated dots)
+const TypingIndicator = () => (
+  <div className="flex items-center gap-1 text-muted-foreground">
+    <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></span>
+    <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:0.2s]"></span>
+    <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:0.4s]"></span>
+  </div>
+);
+
+const ChatPage = () => {
   const { id } = useParams();
-  const [file, setFile] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [message, setMessage] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+  const [questions, setQuestions] = useState([]);
+  const [chat, setChat] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [newQuestion, setNewQuestion] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const messagesEndRef = useRef(null);
+  const token = Cookie.get("token");
+  const navigate = useNavigate();
 
-  // Fetch chat details
-  useEffect(() => {
-    async function fetchChat() {
-      try {
-        const res = await api.get(`/chat/${id}`);
-        const chat = res.data.data.chat;
-        setFile(chat.file);
-
-        // Build initial conversation
-        const initialMessages = [
-          {
-            id: "file-info",
-            role: "user",
-            type: "file",
-            name: chat.file?.name,
-            size: chat.file?.size,
-          },
-          {
-            id: "summary",
-            role: "assistant",
-            type: "summary",
-            answer: chat.file?.summary || "No summary available",
-          },
-          ...(chat.questions || []),
-        ];
-
-        setMessages(initialMessages);
-      } catch (err) {
-        toast.error(getApiMessage(err, "Failed to load chat"));
-      } finally {
-        setLoading(false);
-      }
+  const fetchChat = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.get(`/chat/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const { chat, questions } = data.data || {};
+      setChat(chat || null);
+      setQuestions(questions || []);
+    } catch (error) {
+      const message = getApiMessage(error, "Error fetching chat");
+      toast.error(message);
+      console.error("Error fetching chat:", error);
+    } finally {
+      setLoading(false);
     }
-    if (id) fetchChat();
-  }, [id]);
+  }, [id, token]);
 
-  // Scroll to bottom on new messages
+  useEffect(() => {
+    fetchChat();
+  }, [fetchChat]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [questions, messagesEndRef]);
 
-  // Send new message
-  const handleSend = async () => {
-    const trimmed = message.trim();
-    if (!trimmed) return;
+  const askQuestion = async () => {
+    const text = newQuestion?.trim();
+    if (!text) return;
 
-    const userMsg = {
-      id: Date.now(),
-      question: trimmed,
+    setSubmitting(true);
+
+    const tempId = Date.now();
+    const tempQuestion = {
+      _id: tempId,
+      question: text,
       answer: null,
-      role: "user",
+      optimistic: true,
+      questionTime: new Date().toISOString(),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
-    setMessage("");
-    setIsTyping(true);
+    setQuestions((prev) => [...prev, tempQuestion]);
+    setNewQuestion("");
 
     try {
-      const res = await api.post(`/questions/${id}/ask`, { question: trimmed });
-      const botMsg = {
-        id: Date.now() + 1,
-        question: trimmed,
-        answer: res.data.data.answer,
-        role: "assistant",
-      };
-
-      setMessages((prev) => [
-        ...prev.filter((m) => m.id !== userMsg.id),
-        botMsg,
-      ]);
-    } catch (err) {
-      toast.error(getApiMessage(err, "Failed to get answer"));
+      const { data } = await api.post(
+        `/question/${id}/ask`,
+        { question: text },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const serverItem = data?.data;
+      setQuestions((prev) =>
+        prev.map((q) =>
+          q._id === tempId
+            ? { ...serverItem, createdAt: serverItem.createdAt || q.createdAt }
+            : q
+        )
+      );
+    } catch (error) {
+      setQuestions((prev) => prev.filter((q) => q._id !== tempId));
+      toast.error(getApiMessage(error, "Failed to submit question"));
+      console.error("askQuestion error:", error);
     } finally {
-      setIsTyping(false);
+      setSubmitting(false);
     }
   };
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      if (!submitting && newQuestion.trim()) askQuestion();
     }
   };
 
-  return (
-    <div className="flex h-screen bg-background">
-      {/* Sidebar */}
-      <Sidebar />
+  // 🔹 Skeleton Loading UI
+  if (loading) {
+    return (
+      <section className="flex flex-col h-full min-h-[calc(100vh-85px)] p-4 gap-6">
+        {/* File Info Skeleton */}
+        <div className="flex justify-end">
+          <div className="flex items-center gap-3 rounded-lg p-3 w-[280px] bg-muted">
+            <Skeleton className="w-5 h-5 rounded" />
+            <div className="flex flex-col flex-1 min-w-0">
+              <Skeleton className="h-4 w-40 mb-2" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          </div>
+        </div>
 
-      {/* Main Chat Section */}
-      <div className="flex-1 flex flex-col">
-        {/* Chat Area */}
-        <ScrollArea className="flex-1 px-6 py-4">
-          <div className="space-y-6">
-            {loading ? (
-              <>
-                <div className="animate-pulse h-6 w-1/3 bg-muted rounded-md" />
-                <div className="animate-pulse h-6 w-2/3 bg-muted rounded-md" />
-              </>
-            ) : (
-              messages.map((msg, index) => {
-                if (msg.type === "file") {
-                  return (
-                    <div
-                      key={msg.id}
-                      className="flex justify-end animate-in slide-in-from-bottom"
-                      style={{ animationDelay: `${index * 50}ms` }}
-                    >
-                      <div className="max-w-[70%] rounded-xl p-4 bg-primary text-primary-foreground shadow-md">
-                        <div className="flex items-center space-x-3">
-                          <FileIcon className="h-5 w-5" />
-                          <div>
-                            <p className="font-medium truncate">
-                              {msg.name || "Untitled Document"}
-                            </p>
-                            <p className="text-xs opacity-80">
-                              {msg.size
-                                ? (msg.size / 1024 / 1024).toFixed(2) + " MB"
-                                : "—"}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }
+        {/* Summary Skeleton */}
+        <div>
+          <Skeleton className="h-5 w-32 mb-3" />
+          <Skeleton className="h-4 w-full mb-2" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
 
-                if (msg.type === "summary") {
-                  return (
-                    <div
-                      key={msg.id}
-                      className="flex justify-start animate-in slide-in-from-bottom"
-                      style={{ animationDelay: `${index * 50}ms` }}
-                    >
-                      <div className="max-w-[70%] rounded-xl p-4 bg-card border border-border shadow-sm">
-                        <h3 className="font-semibold mb-2">Summary</h3>
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                          {msg.answer}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                }
-
-                // Normal chat bubbles
-                return (
-                  <div
-                    key={msg.id || index}
-                    className={cn(
-                      "flex space-x-2 animate-in slide-in-from-bottom duration-500",
-                      msg.role === "user" ? "justify-end" : "justify-start"
-                    )}
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    {msg.role === "assistant" && (
-                      <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                        <Bot className="h-4 w-4 text-primary-foreground" />
-                      </div>
-                    )}
-
-                    <div
-                      className={cn(
-                        "max-w-[70%] rounded-xl p-4 text-sm shadow-md",
-                        msg.role === "user"
-                          ? "bg-primary text-primary-foreground rounded-br-sm"
-                          : "bg-card border border-border rounded-bl-sm"
-                      )}
-                    >
-                      {msg.role === "user" ? (
-                        <p>{msg.question}</p>
-                      ) : (
-                        <p>{msg.answer}</p>
-                      )}
-                    </div>
-
-                    {msg.role === "user" && (
-                      <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-                        <User className="h-4 w-4 text-secondary-foreground" />
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            )}
-
-            {isTyping && (
-              <div className="flex space-x-2 justify-start animate-in slide-in-from-bottom duration-300">
-                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                  <Bot className="h-4 w-4 text-primary-foreground" />
+        {/* Chat bubbles skeleton */}
+        <div className="flex flex-col gap-6">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="flex flex-col gap-3 max-w-full">
+              {/* User message */}
+              <div className="flex items-end justify-end gap-2">
+                <div className="flex flex-col items-end max-w-[80%]">
+                  <Skeleton className="h-5 w-48 mb-1 rounded-lg" />
+                  <Skeleton className="h-3 w-16" />
                 </div>
-                <div className="bg-muted rounded-lg rounded-bl-sm p-3 text-sm shadow-sm">
-                  <div className="flex space-x-1">
-                    <div className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce" />
-                    <div
-                      className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"
-                      style={{ animationDelay: "150ms" }}
-                    />
-                    <div
-                      className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"
-                      style={{ animationDelay: "300ms" }}
-                    />
+                <Skeleton className="w-8 h-8 rounded-full" />
+              </div>
+              {/* Bot reply */}
+              <div className="flex items-start gap-2">
+                <Skeleton className="w-8 h-8 rounded-full" />
+                <div className="flex flex-col items-start max-w-[80%]">
+                  <Skeleton className="h-5 w-64 mb-1 rounded-lg" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (!chat) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-100px)] px-4 text-center bg-gradient-to-b from-background to-muted/40 rounded-xl shadow-lg">
+        <div className="rounded-full bg-primary/10 p-5 mb-6 border border-primary/20">
+          <MessagesSquareIcon className="w-10 h-10 text-primary" />
+        </div>
+        <h2 className="text-3xl font-bold text-foreground mb-2">
+          Chat Unavailable
+        </h2>
+        <p className="text-base text-muted-foreground mb-4 max-w-md">
+          The requested chat could not be found.
+          <br />
+          It may have been deleted or you lack permission to view it.
+        </p>
+        <Button
+          variant="default"
+          onClick={() => navigate("/upload")}
+          className="mt-2 px-6 py-2 text-base cursor-pointer font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
+        >
+          Go Back to Dashboard
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <section className="flex flex-col h-full min-h-[calc(100vh-85px)] bg-transparent">
+      <div className="flex-1 p-4 gap-6 overflow-y-auto mobile-scrollbar">
+        {/* File info */}
+        <div className="flex items-center justify-end mb-4">
+          <div className="flex items-center gap-3 rounded-lg p-3 w-[280px] bg-primary">
+            <FilesIcon className="text-primary-foreground flex-shrink-0 w-5 h-5" />
+            <div className="flex flex-col flex-1 min-w-0">
+              <span
+                title={chat?.file?.name || "Untitled"}
+                className="font-medium text-primary-foreground truncate"
+              >
+                {chat?.file?.name || "Untitled"}
+              </span>
+              <span className="text-sm text-primary-foreground/80">
+                {formatFileSize(chat?.file?.size)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Summary */}
+        <div className="mb-6">
+          <h2 className="font-semibold text-lg mb-1">Summary</h2>
+          <p className="text-muted-foreground">
+            {chat?.file?.summary || "No summary available."}
+          </p>
+        </div>
+
+        {/* Q&A Flow */}
+        <div className="flex flex-col gap-4">
+          {questions.length > 0 ? (
+            questions.map((q) => (
+              <div key={q._id} className="flex flex-col gap-2 max-w-full">
+                {/* User question */}
+                <div className="flex items-end justify-end gap-2">
+                  <div className="flex flex-col items-end max-w-[80%]">
+                    <div className="bg-primary/20 px-3 py-2 rounded-lg break-words">
+                      {q.question}
+                    </div>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      {q.questionTime
+                        ? new Date(q.questionTime).toLocaleTimeString()
+                        : ""}
+                    </span>
+                  </div>
+                  <div className="bg-primary rounded-full p-2">
+                    <User className="w-5 h-5 text-primary-foreground" />
+                  </div>
+                </div>
+
+                {/* AI answer */}
+                <div className="flex items-start gap-2">
+                  <div className="bg-primary rounded-full p-2">
+                    <Bot className="w-5 h-5 text-primary-foreground" />
+                  </div>
+                  <div className="flex flex-col items-start max-w-[80%]">
+                    <div className="bg-muted px-3 py-2 rounded-lg break-words">
+                      {q.answer ? (
+                        q.answer
+                      ) : q.optimistic ? (
+                        <TypingIndicator />
+                      ) : (
+                        <span className="text-muted-foreground italic">
+                          No answer yet
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      {q.answerTime
+                        ? new Date(q.answerTime).toLocaleTimeString()
+                        : ""}
+                    </span>
                   </div>
                 </div>
               </div>
+            ))
+          ) : (
+            <p className="text-muted-foreground">
+              No questions yet. Start by asking one below.
+            </p>
+          )}
+        </div>
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input */}
+      <div className="border-t border-border bg-background p-3 sticky bottom-0 left-0 w-full">
+        <div className="max-w-[1200px] mx-auto flex items-center gap-2">
+          <Textarea
+            placeholder="Ask a question... (Shift+Enter for newline)"
+            value={newQuestion}
+            onChange={(e) => setNewQuestion(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="flex-1 resize-none"
+            rows={2}
+          />
+          <Button
+            onClick={askQuestion}
+            disabled={submitting || !newQuestion.trim()}
+            className="shrink-0"
+          >
+            {submitting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
             )}
-
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
-
-        {/* Input */}
-        <div className="p-4 border-t border-border bg-background/80 backdrop-blur-md shadow-lg">
-          <div className="flex space-x-2">
-            <Input
-              placeholder="Ask about your document..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={isTyping}
-              className="flex-1 focus:ring-2 focus:ring-primary/20 transition-all"
-            />
-            <Button
-              size="icon"
-              onClick={handleSend}
-              disabled={!message.trim() || isTyping}
-              className="hover:scale-110 transition-transform disabled:hover:scale-100"
-            >
-              {isTyping ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground mt-2 text-center">
-            Press Enter to send, Shift+Enter for new line
-          </p>
+          </Button>
         </div>
       </div>
-    </div>
+    </section>
   );
-}
+};
+
+export default ChatPage;

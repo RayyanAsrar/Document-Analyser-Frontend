@@ -1,9 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
 import {
   Card,
   CardContent,
@@ -12,11 +10,12 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
-import { toast } from "sonner";
-import { Toaster } from "../components/ui/sonner";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { LoaderCircle } from "lucide-react";
+import api, { getApiMessage } from "../lib/apiClient";
 
 export default function SignUpPage() {
-  const { register } = useAuth();
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
@@ -36,125 +35,137 @@ export default function SignUpPage() {
 
     setLoading(true);
     try {
-      // Use the actual username from state, or generate from name/email as fallback
-      const finalUsername = username.trim() || 
-        name.trim().replace(/\s+/g, "_").toLowerCase() || 
+      const finalUsername =
+        username.trim() ||
+        name.trim().replace(/\s+/g, "_").toLowerCase() ||
         email.split("@")[0];
 
-      await register({ 
-        username: finalUsername, 
-        name, 
-        email, 
-        password 
-      });
+      const user = {
+        username: finalUsername,
+        name,
+        email,
+        password,
+      };
 
-      toast.success("✅ Signup successful! Redirecting to login...");
+      const { data: res } = await api.post("/auth/register", user);
+
+      const { message } = res;
+
+      toast.success(message);
       navigate("/login");
-    } catch (err) {
-      const errorMsg =
-        err?.response?.data?.message || err?.message || "Signup failed";
-      toast.error(`❌ ${errorMsg}`);
-      console.error("Signup error:", errorMsg);
+    } catch (error) {
+      const message = getApiMessage(error, "Signup failed");
+      toast.error(message);
+      console.error("Signup error:", message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 animate-in fade-in duration-700">
-      <Card className="w-full max-w-md animate-in slide-in-from-bottom duration-500 delay-200">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Create account</CardTitle>
-          <CardDescription className="text-center">
+    <div className="min-h-[70vh] flex items-center justify-center p-4">
+      <Card className="w-full max-w-md rounded-2xl shadow-lg border border-border bg-card/80 backdrop-blur-md">
+        <CardHeader className="space-y-2 pb-0">
+          <CardTitle className="text-2xl font-bold text-center tracking-tight">
+            Create account
+          </CardTitle>
+          <CardDescription className="text-center text-base text-muted-foreground">
             Enter your information to create your account
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5 pt-2 pb-3">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name" className="font-medium">
+                Full Name
+              </Label>
               <Input
                 id="name"
                 type="text"
                 placeholder="Enter your full name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="transition-all duration-200 focus:scale-[1.02]"
                 required
+                className="rounded-lg border-border focus:ring-2 focus:ring-primary/30"
               />
             </div>
-            
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username" className="font-medium">
+                Username
+              </Label>
               <Input
                 id="username"
                 type="text"
                 placeholder="Choose a username"
                 value={username}
-                onChange={(e) => setUsername(e.target.value.slice(0, 16))} // limit 16 chars
-                className="transition-all duration-200 focus:scale-[1.02]"
+                onChange={(e) => setUsername(e.target.value.slice(0, 16))}
                 required
+                className="rounded-lg border-border focus:ring-2 focus:ring-primary/30"
               />
-              <p className="text-xs text-muted-foreground">
-                3-16 characters. Will be auto-generated from name if left empty.
-              </p>
+              <p className="text-xs text-muted-foreground">3-16 characters.</p>
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="font-medium">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="transition-all duration-200 focus:scale-[1.02]"
                 required
+                className="rounded-lg border-border focus:ring-2 focus:ring-primary/30"
               />
             </div>
-            
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="font-medium">
+                Password
+              </Label>
               <Input
                 id="password"
                 type="password"
                 placeholder="Create a password (6-16 characters)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value.slice(0, 16))}
-                className="transition-all duration-200 focus:scale-[1.02]"
                 required
                 minLength={6}
                 maxLength={16}
+                className="rounded-lg border-border focus:ring-2 focus:ring-primary/30"
               />
             </div>
-            
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword" className="font-medium">
+                Confirm Password
+              </Label>
               <Input
                 id="confirmPassword"
                 type="password"
                 placeholder="Confirm your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="transition-all duration-200 focus:scale-[1.02] mb-4"
                 required
+                className="rounded-lg border-border focus:ring-2 focus:ring-primary/30"
               />
             </div>
           </CardContent>
-          
-          <CardFooter className="flex flex-col space-y-4">
+          <CardFooter className="flex flex-col space-y-4 pt-0">
             <Button
               type="submit"
               disabled={loading}
-              className="w-full hover:scale-105 transition-all duration-200 hover:shadow-lg"
+              className="w-full rounded-lg font-semibold text-base"
             >
-              {loading ? "Creating..." : "Create Account"}
+              {loading ? (
+                <LoaderCircle className="w-5 h-5 animate-spin" />
+              ) : (
+                "Create Account"
+              )}
             </Button>
             <p className="text-sm text-muted-foreground text-center">
               Already have an account?{" "}
               <Link
                 to="/login"
-                className="text-primary hover:underline transition-all duration-200 hover:scale-105 inline-block"
+                className="text-primary hover:underline font-medium"
               >
                 Sign in
               </Link>

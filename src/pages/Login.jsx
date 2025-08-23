@@ -1,9 +1,9 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { LoaderCircle } from "lucide-react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
 import {
   Card,
   CardContent,
@@ -12,9 +12,10 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
-import { toast } from "sonner";
-import { Toaster } from "../components/ui/sonner"; 
-
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import api from "../lib/apiClient";
+import Cookie from "js-cookie";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -29,76 +30,92 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login({ email, password });
-      toast.success("✅ Login successful! Redirecting...");
+      const { data: res } = await api.post("/auth/login", { email, password });
+
+      const { data, message } = res;
+
+      const { token, user } = data;
+
+      Cookie.set("token", token);
+      login(user);
+
+      toast.success(message);
       navigate("/upload");
     } catch (err) {
-      const errorMsg = err?.response?.data?.message || err?.message || "Login failed";
-      toast.error(`❌ INVALID EMAIL OR PASSWORD`);
-      // console.error("Login error:", errorMsg);
+      const errorMsg =
+        err?.response?.data?.message || err?.message || "Login failed";
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 animate-in fade-in duration-700">
-      <Card className="w-full max-w-md animate-in slide-in-from-bottom duration-500 delay-200">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Welcome back</CardTitle>
-          <CardDescription className="text-center">
-            Enter your credentials to access your account
+    <div className="min-h-[70vh] flex items-center justify-center p-4">
+      <Card className="w-full max-w-md rounded-2xl shadow-lg border border-border bg-card/80 backdrop-blur-md">
+        <CardHeader className="space-y-2 pb-0">
+          <CardTitle className="text-2xl font-bold text-center tracking-tight">
+            Welcome back
+          </CardTitle>
+          <CardDescription className="text-center text-base text-muted-foreground">
+            Sign in to your account
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5 pt-2 pb-3">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="font-medium">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="transition-all duration-200 focus:scale-[1.02]"
                 required
+                className="rounded-lg border-border focus:ring-2 focus:ring-primary/30"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="font-medium">
+                Password
+              </Label>
               <Input
                 id="password"
                 type="password"
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="transition-all duration-200 focus:scale-[1.02] mb-4"
                 required
+                className="rounded-lg border-border focus:ring-2 focus:ring-primary/30"
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
+          <CardFooter className="flex flex-col space-y-4 pt-0">
             <Button
               type="submit"
               disabled={loading}
-              className="w-full hover:scale-105 transition-all duration-200 hover:shadow-lg"
+              className="w-full rounded-lg font-semibold text-base"
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? (
+                <LoaderCircle className="w-5 h-5 animate-spin" />
+              ) : (
+                "Sign In"
+              )}
             </Button>
             <p className="text-sm text-muted-foreground text-center">
               Don&apos;t have an account?{" "}
-              <a
-                href="/signup"
-                className="text-primary hover:underline transition-all duration-200 hover:scale-105 inline-block"
+              <Link
+                to="/signup"
+                className="text-primary hover:underline font-medium"
               >
                 Sign up
-              </a>
+              </Link>
             </p>
           </CardFooter>
         </form>
       </Card>
-
-      
     </div>
   );
 }
