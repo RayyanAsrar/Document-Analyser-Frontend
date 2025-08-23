@@ -4,14 +4,16 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Upload, FileText, X } from "lucide-react";
 import { cn } from "../lib/utils";
-import { api, getApiMessage } from "@/lib/apiClient";
+import api, { getApiMessage } from "@/lib/apiClient";
 import { toast } from "sonner";
+import Cookie from "js-cookie";
 
 export function MainContent() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const navigate = useNavigate();
+  const token = Cookie.get("token");
 
   // 🔥 Upload logic
   const handleFileUpload = async () => {
@@ -20,10 +22,18 @@ export function MainContent() {
     const file = selectedFile;
     setLoading(true);
     try {
-      const uploadRes = await api.post("/upload", {
-        fileName: file.name,
-        contentType: file.type,
-      });
+      const uploadRes = await api.post(
+        "/upload",
+        {
+          fileName: file.name,
+          contentType: file.type,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const { url, key } = uploadRes.data.data;
       if (!url || !key) throw new Error("Invalid upload response");
@@ -34,12 +44,20 @@ export function MainContent() {
         body: file,
       });
 
-      const processRes = await api.post("/file/process", {
-        key,
-        name: file.name,
-        size: file.size,
-        contentType: file.type,
-      });
+      const processRes = await api.post(
+        "/file/process",
+        {
+          key,
+          name: file.name,
+          size: file.size,
+          contentType: file.type,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const chatId = processRes.data.data.chat._id;
       toast.success("File uploaded and processed! Redirecting...");

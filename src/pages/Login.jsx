@@ -14,7 +14,8 @@ import {
 } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-
+import api from "../lib/apiClient";
+import Cookie from "js-cookie";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -29,11 +30,20 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login({ email, password });
-      toast.success("✅ Login successful! Redirecting...");
+      const { data: res } = await api.post("/auth/login", { email, password });
+
+      const { data, message } = res;
+
+      const { token, user } = data;
+
+      Cookie.set("token", token);
+      login(user);
+
+      toast.success(message);
       navigate("/upload");
     } catch (err) {
-      const errorMsg = err?.response?.data?.message || err?.message || "Login failed";
+      const errorMsg =
+        err?.response?.data?.message || err?.message || "Login failed";
       toast.error(errorMsg);
       // console.error("Login error:", errorMsg);
     } finally {
@@ -45,7 +55,9 @@ export default function LoginPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4 animate-in fade-in duration-700">
       <Card className="w-full max-w-md animate-in slide-in-from-bottom duration-500 delay-200">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Welcome back</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">
+            Welcome back
+          </CardTitle>
           <CardDescription className="text-center">
             Enter your credentials to access your account
           </CardDescription>
@@ -101,8 +113,6 @@ export default function LoginPage() {
           </CardFooter>
         </form>
       </Card>
-
-      
     </div>
   );
 }

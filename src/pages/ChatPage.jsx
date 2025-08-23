@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
-import { api } from "../lib/apiClient";
+import { useNavigate, useParams } from "react-router-dom";
+import api from "../lib/apiClient";
 import { toast } from "sonner";
-import { FilesIcon, Send, Loader2, Bot, User } from "lucide-react";
+import { FilesIcon, Send, Loader2, Bot, User, ChartAreaIcon, MessagesSquareIcon } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import Cookie from "js-cookie";
 
 // Utility to format file size
 const formatFileSize = (bytes) => {
@@ -30,11 +31,17 @@ const ChatPage = () => {
   const [newQuestion, setNewQuestion] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const messagesEndRef = useRef(null);
+  const token = Cookie.get("token");
+  const navigate = useNavigate();
 
   const fetchChat = useCallback(async () => {
     try {
       setLoading(true);
-      const { data } = await api.get(`/chat/${id}`);
+      const { data } = await api.get(`/chat/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const { chat, questions } = data.data || {};
       setChat(chat || null);
       setQuestions(questions || []);
@@ -44,7 +51,7 @@ const ChatPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, token]);
 
   useEffect(() => {
     fetchChat();
@@ -76,9 +83,17 @@ const ChatPage = () => {
     setNewQuestion("");
 
     try {
-      const { data } = await api.post(`/question/${id}/ask`, {
-        question: text,
-      });
+      const { data } = await api.post(
+        `/question/${id}/ask`,
+        {
+          question: text,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       const serverItem = data?.data;
 
       // merge server data with optimistic one, keeping createdAt if missing
@@ -115,9 +130,25 @@ const ChatPage = () => {
 
   if (!chat) {
     return (
-      <section className="flex items-center justify-center h-full">
-        <span className="text-destructive font-medium">No chat found</span>
-      </section>
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-100px)] px-4 text-center bg-gradient-to-b from-background to-muted/40 rounded-xl shadow-lg">
+      <div className="rounded-full bg-primary/10 p-5 mb-6 border border-primary/20">
+        <MessagesSquareIcon className="w-10 h-10 text-primary" />
+      </div>
+      <h2 className="text-3xl font-bold text-foreground mb-2">
+        Chat Unavailable
+      </h2>
+      <p className="text-base text-muted-foreground mb-4 max-w-md">
+        The requested chat could not be found.<br />
+        It may have been deleted or you lack permission to view it.
+      </p>
+      <Button
+        variant="default"
+        onClick={() => navigate("/upload")}
+        className="mt-2 px-6 py-2 text-base cursor-pointer font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
+      >
+        Go Back to Dashboard
+      </Button>
+      </div>
     );
   }
 

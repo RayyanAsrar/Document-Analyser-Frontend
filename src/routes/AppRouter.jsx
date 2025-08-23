@@ -1,0 +1,39 @@
+import React from "react";
+import { Routes, Route } from "react-router-dom";
+import ProtectedRoute from "./ProtectedRoute";
+import DashboardLayout from "../layout/DashboardLayout";
+import HomePage from "../pages/HomePage";
+import GuestRoute from "./GuestRoute";
+import LoginPage from "../pages/Login";
+import SignUpPage from "../pages/Signup";
+import UploadPage from "../pages/Upload";
+import ChatPage from "../pages/ChatPage";
+
+const AppRouter = () => {
+  return (
+    <Routes>
+      {/* Public route */}
+      <Route path="/" element={<HomePage />} />
+
+      {/* Guest-only routes */}
+      <Route element={<GuestRoute />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
+      </Route>
+
+      {/* Protected routes */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/upload" element={<UploadPage />} />
+        <Route path="/chat/:id" element={<ChatPage />} />
+      </Route>
+    </Routes>
+  );
+};
+
+export default AppRouter;

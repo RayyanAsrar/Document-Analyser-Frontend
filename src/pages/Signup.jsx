@@ -1,4 +1,3 @@
-import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -14,9 +13,9 @@ import {
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { LoaderCircle } from "lucide-react";
+import api from "../lib/apiClient";
 
 export default function SignUpPage() {
-  const { register } = useAuth();
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
@@ -36,20 +35,23 @@ export default function SignUpPage() {
 
     setLoading(true);
     try {
-      // Use the actual username from state, or generate from name/email as fallback
       const finalUsername =
         username.trim() ||
         name.trim().replace(/\s+/g, "_").toLowerCase() ||
         email.split("@")[0];
 
-      await register({
+      const user = {
         username: finalUsername,
         name,
         email,
         password,
-      });
+      };
 
-      toast.success("✅ Signup successful! Redirecting to login...");
+      const { data: res } = await api.post("/auth/register", user);
+
+      const { message } = res;
+
+      toast.success(message);
       navigate("/login");
     } catch (err) {
       const errorMsg =

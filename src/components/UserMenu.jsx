@@ -14,7 +14,6 @@ import { useTheme } from "../context/ThemeProvider";
 const UserMenu = () => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  // const { user } = getAuthCookies();
   const { logout, user } = useAuth();
   const { theme, setTheme } = useTheme();
 

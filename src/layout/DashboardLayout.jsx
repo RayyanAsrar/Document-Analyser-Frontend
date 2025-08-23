@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { Link, NavLink, Outlet } from "react-router";
 import { FilesIcon, LogOut, PenBoxIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, NavLink, Outlet } from "react-router";
 // import { toast } from "sonner";
 
 import AppSidebar from "../components/AppSidebar";
@@ -19,29 +19,34 @@ import {
   SidebarTrigger,
 } from "../components/ui/sidebar";
 
-import { api } from "../lib/apiClient";
-import { useAuth } from "../context/AuthContext";
 import UserMenu from "../components/UserMenu";
 import { Separator } from "../components/ui/separator";
+import { useAuth } from "../context/AuthContext";
+import api from "../lib/apiClient";
+import Cookie from "js-cookie";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(true);
   const { logout } = useAuth();
   const [chats, setChats] = useState([]);
+  const token = Cookie.get("token");
 
   // Fetch chats on mount
   useEffect(() => {
     const fetchChats = async () => {
       try {
-        const { data } = await api.get("/chat");
+        const { data } = await api.get("/chat", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         setChats(data.data || []);
       } catch (error) {
         console.error("Error fetching chats:", error);
-        // toast.error("Failed to fetch chats");
       }
     };
     fetchChats();
-  }, []);
+  }, [token]);
 
   const handleLogout = () => {
     logout();
