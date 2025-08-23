@@ -8,11 +8,11 @@ import {
   Loader2,
   Bot,
   User,
-  ChartAreaIcon,
   MessagesSquareIcon,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import Cookie from "js-cookie";
 
 // Utility to format file size
@@ -66,13 +66,10 @@ const ChatPage = () => {
     fetchChat();
   }, [fetchChat]);
 
-  // Auto-scroll on new message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [questions]);
+  }, [questions, messagesEndRef]);
 
-  // Submit new question
-  // When asking a question
   const askQuestion = async () => {
     const text = newQuestion?.trim();
     if (!text) return;
@@ -94,14 +91,8 @@ const ChatPage = () => {
     try {
       const { data } = await api.post(
         `/question/${id}/ask`,
-        {
-          question: text,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { question: text },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       const serverItem = data?.data;
       setQuestions((prev) =>
@@ -127,10 +118,51 @@ const ChatPage = () => {
     }
   };
 
+  // 🔹 Skeleton Loading UI
   if (loading) {
     return (
-      <section className="flex items-center justify-center h-full">
-        <p className="text-muted-foreground">Loading chat...</p>
+      <section className="flex flex-col h-full min-h-[calc(100vh-85px)] p-4 gap-6">
+        {/* File Info Skeleton */}
+        <div className="flex justify-end">
+          <div className="flex items-center gap-3 rounded-lg p-3 w-[280px] bg-muted">
+            <Skeleton className="w-5 h-5 rounded" />
+            <div className="flex flex-col flex-1 min-w-0">
+              <Skeleton className="h-4 w-40 mb-2" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          </div>
+        </div>
+
+        {/* Summary Skeleton */}
+        <div>
+          <Skeleton className="h-5 w-32 mb-3" />
+          <Skeleton className="h-4 w-full mb-2" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
+
+        {/* Chat bubbles skeleton */}
+        <div className="flex flex-col gap-6">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="flex flex-col gap-3 max-w-full">
+              {/* User message */}
+              <div className="flex items-end justify-end gap-2">
+                <div className="flex flex-col items-end max-w-[80%]">
+                  <Skeleton className="h-5 w-48 mb-1 rounded-lg" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+                <Skeleton className="w-8 h-8 rounded-full" />
+              </div>
+              {/* Bot reply */}
+              <div className="flex items-start gap-2">
+                <Skeleton className="w-8 h-8 rounded-full" />
+                <div className="flex flex-col items-start max-w-[80%]">
+                  <Skeleton className="h-5 w-64 mb-1 rounded-lg" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
     );
   }
@@ -163,7 +195,7 @@ const ChatPage = () => {
   return (
     <section className="flex flex-col h-full min-h-[calc(100vh-85px)] bg-transparent">
       <div className="flex-1 p-4 gap-6 overflow-y-auto mobile-scrollbar">
-        {/* File info (separate block) */}
+        {/* File info */}
         <div className="flex items-center justify-end mb-4">
           <div className="flex items-center gap-3 rounded-lg p-3 w-[280px] bg-primary">
             <FilesIcon className="text-primary-foreground flex-shrink-0 w-5 h-5" />
@@ -181,7 +213,7 @@ const ChatPage = () => {
           </div>
         </div>
 
-        {/* File Summary (separate block) */}
+        {/* Summary */}
         <div className="mb-6">
           <h2 className="font-semibold text-lg mb-1">Summary</h2>
           <p className="text-muted-foreground">
@@ -189,12 +221,12 @@ const ChatPage = () => {
           </p>
         </div>
 
-        {/* Q&A Chat Flow */}
+        {/* Q&A Flow */}
         <div className="flex flex-col gap-4">
           {questions.length > 0 ? (
             questions.map((q) => (
               <div key={q._id} className="flex flex-col gap-2 max-w-full">
-                {/* User Question */}
+                {/* User question */}
                 <div className="flex items-end justify-end gap-2">
                   <div className="flex flex-col items-end max-w-[80%]">
                     <div className="bg-primary/20 px-3 py-2 rounded-lg break-words">
@@ -211,7 +243,7 @@ const ChatPage = () => {
                   </div>
                 </div>
 
-                {/* AI Answer */}
+                {/* AI answer */}
                 <div className="flex items-start gap-2">
                   <div className="bg-primary rounded-full p-2">
                     <Bot className="w-5 h-5 text-primary-foreground" />
@@ -229,11 +261,9 @@ const ChatPage = () => {
                       )}
                     </div>
                     <span className="text-xs text-muted-foreground mt-1">
-                      <span className="text-xs text-muted-foreground mt-1">
-                        {q.answerTime
-                          ? new Date(q.answerTime).toLocaleTimeString()
-                          : ""}
-                      </span>
+                      {q.answerTime
+                        ? new Date(q.answerTime).toLocaleTimeString()
+                        : ""}
                     </span>
                   </div>
                 </div>
@@ -246,10 +276,10 @@ const ChatPage = () => {
           )}
         </div>
 
-        {/* Scroll anchor */}
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Input */}
       <div className="border-t border-border bg-background p-3 sticky bottom-0 left-0 w-full">
         <div className="max-w-[1200px] mx-auto flex items-center gap-2">
           <Textarea

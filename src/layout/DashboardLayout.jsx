@@ -1,8 +1,7 @@
 import { FilesIcon, LogOut, PenBoxIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet } from "react-router";
-// import { toast } from "sonner";
-
+import { Skeleton } from "../components/ui/skeleton";
 import AppSidebar from "../components/AppSidebar";
 import {
   SidebarContent,
@@ -18,7 +17,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "../components/ui/sidebar";
-
 import UserMenu from "../components/UserMenu";
 import { Separator } from "../components/ui/separator";
 import { useAuth } from "../context/AuthContext";
@@ -29,11 +27,13 @@ const DashboardLayout = () => {
   const [open, setOpen] = useState(true);
   const { logout } = useAuth();
   const [chats, setChats] = useState([]);
+  const [loadingChats, setLoadingChats] = useState(true);
   const token = Cookie.get("token");
 
   useEffect(() => {
     const fetchChats = async () => {
       try {
+        setLoadingChats(true);
         const { data } = await api.get("/chat", {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -42,6 +42,8 @@ const DashboardLayout = () => {
         setChats(data.data || []);
       } catch (error) {
         console.error("Error fetching chats:", error);
+      } finally {
+        setLoadingChats(false);
       }
     };
     fetchChats();
@@ -111,7 +113,16 @@ const DashboardLayout = () => {
             <SidebarGroupContent>
               <SidebarMenu className="overflow-y-auto mobile-scrollbar">
                 <div className="flex flex-col gap-1">
-                  {chats.length === 0 ? (
+                  {loadingChats ? (
+                    // Skeleton UI while loading
+                    <>
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="px-2 py-2">
+                          <Skeleton className="h-5 w-full rounded-md" />
+                        </div>
+                      ))}
+                    </>
+                  ) : chats.length === 0 ? (
                     <span className="text-sm text-muted-foreground px-2">
                       No chats yet
                     </span>
