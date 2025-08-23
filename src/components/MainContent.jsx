@@ -36,7 +36,6 @@ export function MainContent() {
       );
 
       const { url, key } = uploadRes.data.data;
-      if (!url || !key) throw new Error("Invalid upload response");
 
       await fetch(url, {
         method: "PUT",
@@ -44,7 +43,7 @@ export function MainContent() {
         body: file,
       });
 
-      const processRes = await api.post(
+      const { data } = await api.post(
         "/file/process",
         {
           key,
@@ -59,8 +58,11 @@ export function MainContent() {
         }
       );
 
-      const chatId = processRes.data.data.chat._id;
-      toast.success("File uploaded and processed! Redirecting...");
+      const { chat } = data.data;
+      const message = data.message;
+
+      const chatId = chat?.id;
+      toast.success(message);
       navigate(`/chat/${chatId}`);
     } catch (err) {
       toast.error(getApiMessage(err, "Upload failed"));

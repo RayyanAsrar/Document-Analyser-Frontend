@@ -1,8 +1,16 @@
 import React, { useCallback, useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import api from "../lib/apiClient";
+import api, { getApiMessage } from "../lib/apiClient";
 import { toast } from "sonner";
-import { FilesIcon, Send, Loader2, Bot, User, ChartAreaIcon, MessagesSquareIcon } from "lucide-react";
+import {
+  FilesIcon,
+  Send,
+  Loader2,
+  Bot,
+  User,
+  ChartAreaIcon,
+  MessagesSquareIcon,
+} from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import Cookie from "js-cookie";
@@ -46,7 +54,8 @@ const ChatPage = () => {
       setChat(chat || null);
       setQuestions(questions || []);
     } catch (error) {
-      toast.error("Error fetching chat");
+      const message = getApiMessage(error, "Error fetching chat");
+      toast.error(message);
       console.error("Error fetching chat:", error);
     } finally {
       setLoading(false);
@@ -76,7 +85,7 @@ const ChatPage = () => {
       question: text,
       answer: null,
       optimistic: true,
-      createdAt: new Date().toISOString(), // ensure timestamp is there
+      questionTime: new Date().toISOString(),
     };
 
     setQuestions((prev) => [...prev, tempQuestion]);
@@ -95,8 +104,6 @@ const ChatPage = () => {
         }
       );
       const serverItem = data?.data;
-
-      // merge server data with optimistic one, keeping createdAt if missing
       setQuestions((prev) =>
         prev.map((q) =>
           q._id === tempId
@@ -106,7 +113,7 @@ const ChatPage = () => {
       );
     } catch (error) {
       setQuestions((prev) => prev.filter((q) => q._id !== tempId));
-      toast.error("Failed to submit question");
+      toast.error(getApiMessage(error, "Failed to submit question"));
       console.error("askQuestion error:", error);
     } finally {
       setSubmitting(false);
@@ -131,31 +138,31 @@ const ChatPage = () => {
   if (!chat) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-100px)] px-4 text-center bg-gradient-to-b from-background to-muted/40 rounded-xl shadow-lg">
-      <div className="rounded-full bg-primary/10 p-5 mb-6 border border-primary/20">
-        <MessagesSquareIcon className="w-10 h-10 text-primary" />
-      </div>
-      <h2 className="text-3xl font-bold text-foreground mb-2">
-        Chat Unavailable
-      </h2>
-      <p className="text-base text-muted-foreground mb-4 max-w-md">
-        The requested chat could not be found.<br />
-        It may have been deleted or you lack permission to view it.
-      </p>
-      <Button
-        variant="default"
-        onClick={() => navigate("/upload")}
-        className="mt-2 px-6 py-2 text-base cursor-pointer font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
-      >
-        Go Back to Dashboard
-      </Button>
+        <div className="rounded-full bg-primary/10 p-5 mb-6 border border-primary/20">
+          <MessagesSquareIcon className="w-10 h-10 text-primary" />
+        </div>
+        <h2 className="text-3xl font-bold text-foreground mb-2">
+          Chat Unavailable
+        </h2>
+        <p className="text-base text-muted-foreground mb-4 max-w-md">
+          The requested chat could not be found.
+          <br />
+          It may have been deleted or you lack permission to view it.
+        </p>
+        <Button
+          variant="default"
+          onClick={() => navigate("/upload")}
+          className="mt-2 px-6 py-2 text-base cursor-pointer font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
+        >
+          Go Back to Dashboard
+        </Button>
       </div>
     );
   }
 
   return (
-    <section className="flex flex-col bg-transparent max-h-[calc(100vh-85px)] overflow-hidden">
-      {/* Scrollable messages area */}
-      <div className="flex-1 p-4 gap-6 overflow-y-auto mobile-scrollbar max-h-[calc(100vh-50px)]">
+    <section className="flex flex-col h-full min-h-[calc(100vh-85px)] bg-transparent">
+      <div className="flex-1 p-4 gap-6 overflow-y-auto mobile-scrollbar">
         {/* File info (separate block) */}
         <div className="flex items-center justify-end mb-4">
           <div className="flex items-center gap-3 rounded-lg p-3 w-[280px] bg-primary">
@@ -243,8 +250,7 @@ const ChatPage = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Fixed chatbox overlay */}
-      <div className="border-t border-border bg-background p-3">
+      <div className="border-t border-border bg-background p-3 sticky bottom-0 left-0 w-full">
         <div className="max-w-[1200px] mx-auto flex items-center gap-2">
           <Textarea
             placeholder="Ask a question... (Shift+Enter for newline)"

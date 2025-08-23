@@ -1,4 +1,6 @@
-import { Upload, Settings, User as UserIcon, Moon, Sun, LogOut } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { LogOut, Moon, Settings, Sun, User as UserIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import {
   DropdownMenu,
@@ -7,10 +9,6 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import { useTheme } from "../context/ThemeProvider";
-import { useAuth } from "@/context/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { Toaster } from "../components/ui/sonner"; // use this instead
 
 export function Navbar() {
   const { theme, setTheme } = useTheme();
@@ -23,7 +21,6 @@ export function Navbar() {
 
   const handleLogout = () => {
     logout();
-    toast.success("✅ You have been logged out");
     navigate("/login");
   };
 

@@ -13,7 +13,7 @@ import {
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { LoaderCircle } from "lucide-react";
-import api from "../lib/apiClient";
+import api, { getApiMessage } from "../lib/apiClient";
 
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -53,11 +53,10 @@ export default function SignUpPage() {
 
       toast.success(message);
       navigate("/login");
-    } catch (err) {
-      const errorMsg =
-        err?.response?.data?.message || err?.message || "Signup failed";
-      toast.error(`❌ ${errorMsg}`);
-      console.error("Signup error:", errorMsg);
+    } catch (error) {
+      const message = getApiMessage(error, "Signup failed");
+      toast.error(message);
+      console.error("Signup error:", message);
     } finally {
       setLoading(false);
     }
