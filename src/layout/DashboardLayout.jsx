@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, NavLink, Outlet } from "react-router";
 import { FilesIcon, LogOut, PenBoxIcon } from "lucide-react";
-import { toast } from "sonner";
+// import { toast } from "sonner";
 
 import AppSidebar from "../components/AppSidebar";
 import {
@@ -21,6 +21,8 @@ import {
 
 import { api } from "../lib/apiClient";
 import { useAuth } from "../context/AuthContext";
+import UserMenu from "../components/UserMenu";
+import { Separator } from "../components/ui/separator";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(true);
@@ -35,7 +37,7 @@ const DashboardLayout = () => {
         setChats(data.data || []);
       } catch (error) {
         console.error("Error fetching chats:", error);
-        toast.error("Failed to fetch chats");
+        // toast.error("Failed to fetch chats");
       }
     };
     fetchChats();
@@ -50,8 +52,8 @@ const DashboardLayout = () => {
       {/* Sidebar */}
       <AppSidebar>
         <SidebarContent>
-          {/* Header */}
-          <SidebarHeader>
+          {/* Fixed Header */}
+          <SidebarHeader className="sticky top-0 z-30 bg-background pb-2">
             <div className="flex items-center space-x-2 animate-in slide-in-from-left duration-500">
               <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center hover:scale-110 transition-transform duration-200">
                 <span className="text-primary-foreground font-bold text-sm">
@@ -63,6 +65,7 @@ const DashboardLayout = () => {
               </span>
             </div>
           </SidebarHeader>
+          <Separator />
 
           {/* Main Buttons */}
           <SidebarGroup>
@@ -89,11 +92,11 @@ const DashboardLayout = () => {
 
           {/* Chats List */}
           <SidebarGroup>
-            <SidebarGroupLabel className="mb-2 text-sm font-semibold tracking-wide uppercase text-muted-foreground">
+            <SidebarGroupLabel className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">
               Chats
             </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu className="max-h-[calc(100vh-20rem)] overflow-y-auto mobile-scrollbar pr-1">
+              <SidebarMenu className="overflow-y-auto mobile-scrollbar">
                 <div className="flex flex-col gap-1">
                   {chats.length === 0 ? (
                     <span className="text-sm text-muted-foreground px-2">
@@ -112,7 +115,7 @@ const DashboardLayout = () => {
                           }`
                         }
                       >
-                        <SidebarMenuSubButton className="w-full text-left truncate">
+                        <SidebarMenuSubButton className="w-full bg-none text-left truncate">
                           {chat?.file?.name?.slice(0, 30) || "Untitled Chat"}
                         </SidebarMenuSubButton>
                       </NavLink>
@@ -122,10 +125,11 @@ const DashboardLayout = () => {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
+          <Separator />
         </SidebarContent>
 
         {/* Footer */}
-        <SidebarFooter className="sticky bottom-0 bg-sidebar z-20 p-4">
+        <SidebarFooter className="sticky bottom-0 z-20 p-4">
           <SidebarMenuButton
             tooltip="Logout"
             onClick={handleLogout}
@@ -145,9 +149,9 @@ const DashboardLayout = () => {
             aria-label="Toggle sidebar"
             onClick={() => setOpen(!open)}
           />
-          {/* Future: <UserMenu /> */}
+          <UserMenu />
         </div>
-        <div className="flex flex-1 max-h-screen flex-col gap-4 p-4">
+        <div className="flex flex-1 max-h-[calc(100vh-5rem)] flex-col gap-4 p-4">
           <Outlet />
         </div>
       </SidebarInset>
