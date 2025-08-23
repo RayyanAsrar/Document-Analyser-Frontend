@@ -2,11 +2,12 @@ import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { Upload, FileText, X } from "lucide-react";
+import { Upload, FileText, X, LoaderCircle } from "lucide-react";
 import { cn } from "../lib/utils";
 import api, { getApiMessage } from "@/lib/apiClient";
 import { toast } from "sonner";
 import Cookie from "js-cookie";
+import { useChats } from "../context/ChatContext";
 
 export function MainContent() {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -14,6 +15,7 @@ export function MainContent() {
   const [selectedFile, setSelectedFile] = useState(null);
   const navigate = useNavigate();
   const token = Cookie.get("token");
+  const { addChats } = useChats();
 
   // 🔥 Upload logic
   const handleFileUpload = async () => {
@@ -60,11 +62,13 @@ export function MainContent() {
 
       const { chat } = data.data;
       const message = data.message;
-
-      const chatId = chat?.id;
+      console.log(chat);
+      addChats({...chat, file: {name: file.name}});
+      const chatId = chat?._id;
       toast.success(message);
       navigate(`/chat/${chatId}`);
     } catch (err) {
+      console.log("error");
       toast.error(getApiMessage(err, "Upload failed"));
     } finally {
       setLoading(false);
@@ -178,11 +182,15 @@ export function MainContent() {
           disabled={loading || (!selectedFile && !loading)}
           className="px-8 py-3 text-lg hover:scale-105 transition-transform animate-in fade-in duration-500"
         >
-          {loading
-            ? "Uploading..."
-            : selectedFile
-            ? "Upload PDF"
-            : "Select PDF"}
+          {loading ? (
+            <>
+              Uploading... <LoaderCircle className="w-5 h-5 animate-spin" />
+            </>
+          ) : selectedFile ? (
+            "Upload PDF"
+          ) : (
+            "Select PDF"
+          )}
         </Button>
       )}
 

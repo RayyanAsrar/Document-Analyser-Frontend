@@ -22,13 +22,14 @@ import { Separator } from "../components/ui/separator";
 import { useAuth } from "../context/AuthContext";
 import api from "../lib/apiClient";
 import Cookie from "js-cookie";
+import { useChats } from "../context/ChatContext";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(true);
   const { logout } = useAuth();
-  const [chats, setChats] = useState([]);
   const [loadingChats, setLoadingChats] = useState(true);
   const token = Cookie.get("token");
+  const { setChats, chats } = useChats();
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -47,7 +48,7 @@ const DashboardLayout = () => {
       }
     };
     fetchChats();
-  }, [token]);
+  }, [token, setChats]);
 
   const handleLogout = () => {
     logout();

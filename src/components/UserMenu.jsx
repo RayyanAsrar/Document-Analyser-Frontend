@@ -3,17 +3,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronsUpDown, LogOut, Settings, Sun, Moon } from "lucide-react";
 import { Button } from "./ui/button";
 import CustomAvatar from "./CustomAvatar";
-// import { Button, CustomAvatar } from "@/components";
-// import useStore from "@/lib/store";
 import Cookie from "js-cookie";
-import { useNavigate } from "react-router-dom";
-// import { getAuthCookies } from "../lib/apiClient";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeProvider";
 
 const UserMenu = () => {
   const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
   const { logout, user } = useAuth();
   const { theme, setTheme } = useTheme();
 
@@ -31,16 +26,16 @@ const UserMenu = () => {
       title: theme === "dark" ? "Light Mode" : "Dark Mode",
       icon: theme === "dark" ? Sun : Moon,
     },
-    {
-      classNames:
-        "w-full flex items-center gap-2 px-4 py-2 rounded-lg text-left hover:bg-muted cursor-pointer",
-      onclickFunc: () => {
-        navigate("/upload");
-        setOpen(false);
-      },
-      title: "Settings",
-      icon: Settings,
-    },
+    // {
+    //   classNames:
+    //     "w-full flex items-center gap-2 px-4 py-2 rounded-lg text-left hover:bg-muted cursor-pointer",
+    //   onclickFunc: () => {
+    //     navigate("/upload");
+    //     setOpen(false);
+    //   },
+    //   title: "Settings",
+    //   icon: Settings,
+    // },
     {
       classNames:
         "w-full flex items-center gap-2 px-4 py-2 rounded-lg text-left text-red-600 cursor-pointer dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30",
