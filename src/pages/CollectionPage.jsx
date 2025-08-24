@@ -16,7 +16,7 @@ import {
 } from "../components/ui/dropdown-menu";
 import { Button } from "../components/ui/button";
 import { Skeleton } from "../components/ui/skeleton";
-import { MoreVertical, Eye, Download, MessageSquare } from "lucide-react";
+import { MoreVertical, Eye, Download, MessageSquare, FileX } from "lucide-react";
 import api from "../lib/apiClient";
 import Cookie from "js-cookie";
 import { useNavigate } from "react-router-dom";
@@ -116,7 +116,22 @@ const CollectionPage = () => {
             </Card>
           ))
         ) : selectedFiles.length <= 0 ? (
-          <div>No files found</div>
+          <div className="flex flex-col items-center justify-center w-full col-span-3 py-12 bg-background rounded-lg border border-dashed border-muted">
+            <FileX className="mb-6 w-16 h-16 opacity-60" />
+            <div className="mb-2 text-xl font-bold text-muted-foreground">
+              Looks like you haven't uploaded a file yet
+            </div>
+            <div className="mb-6 text-sm text-muted-foreground">
+              Start by uploading your first document to get started!
+            </div>
+            <Button
+              onClick={() => navigate("/upload")}
+              variant="default"
+              size="lg"
+            >
+              Upload a file
+            </Button>
+          </div>
         ) : (
           selectedFiles.map((file) => (
             <Card key={file._id} className="relative">
