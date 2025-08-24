@@ -13,28 +13,24 @@ function App() {
       try {
         if (!token) {
           logout();
-          Cookie.remove("token");
           return;
         }
 
         const { data } = await api.get("/user/current", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
         login(data.data);
       } catch (error) {
-        console.error("Error fetching current user:", error, loading);
-        if (error.response?.status === 401) {
-          logout();
-          Cookie.remove("token");
-        }
+        console.error("Error fetching current user:", error);
+        if (error.response?.status === 401) logout();
       } finally {
         setLoading(false);
       }
     };
+
     getCurrentUser();
-  }, [loading, login, logout, setLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // only run once on mount
 
   return loading ? <Loader /> : <AppRouter />;
 }
