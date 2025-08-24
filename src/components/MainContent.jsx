@@ -118,7 +118,7 @@ export function MainContent() {
   };
 
   return (
-  <div className="flex-1 flex flex-col items-center justify-start space-y-6 mt-20 md:mt-52">
+  <div className="flex-1 flex items-center justify-center">
 
     {/* Drag & Drop / File Info Card */}
     <Card
