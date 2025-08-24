@@ -1,7 +1,7 @@
 // src/lib/apiClient.js
 import axios from "axios";
 
-const URL = "https://document-analyser-backend.vercel.app/api";
+const URL = "";
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || URL,
   headers: { "Content-Type": "application/json" },
