@@ -23,7 +23,7 @@ const formatFileSize = (bytes) => {
   return mb < 1 ? `${(bytes / 1024).toFixed(1)} KB` : `${mb.toFixed(2)} MB`;
 };
 
-// Typing indicator component (animated dots)
+// Typing indicator component
 const TypingIndicator = ({ isStreaming }) => (
   <div className="flex items-center gap-1 text-muted-foreground">
     {isStreaming ? <span className="text-sm">AI is typing</span> : null}
@@ -72,10 +72,9 @@ const ChatPage = () => {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [questions, messagesEndRef]);
+  }, [questions]);
 
   // 🔹 Ask Question with streaming
-
   const controllerRef = useRef(null);
 
   const askQuestion = async () => {
@@ -97,7 +96,7 @@ const ChatPage = () => {
     setQuestions((prev) => [...prev, tempQuestion]);
     setNewQuestion("");
 
-    controllerRef.current = new AbortController(); // For cleanup
+    controllerRef.current = new AbortController();
 
     try {
       const response = await fetch(
@@ -109,7 +108,7 @@ const ChatPage = () => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ question: text }),
-          signal: controllerRef.current.signal, // Add abort signal
+          signal: controllerRef.current.signal,
         }
       );
 
@@ -124,29 +123,22 @@ const ChatPage = () => {
       const reader = response.body.getReader();
       const decoder = new TextDecoder("utf-8");
       let fullAnswer = "";
-      let buffer = ""; // Buffer for incomplete chunks
+      let buffer = "";
 
       try {
         while (true) {
           const { done, value } = await reader.read();
+          if (done) break;
 
-          if (done) {
-            console.log("Stream completed");
-            break;
-          }
-
-          // Decode the chunk and add to buffer
           const chunk = decoder.decode(value, { stream: true });
           buffer += chunk;
 
-          // Process complete lines from buffer
           const lines = buffer.split("\n");
-          buffer = lines.pop() || ""; // Keep incomplete line in buffer
+          buffer = lines.pop() || "";
 
           for (const line of lines) {
             const trimmed = line.trim();
 
-            // Skip empty lines and event headers
             if (
               !trimmed ||
               trimmed === "event: message" ||
@@ -155,40 +147,27 @@ const ChatPage = () => {
               continue;
             }
 
-            // Handle data lines
             if (trimmed.startsWith("data:")) {
               const dataContent = trimmed.substring(5).trim();
 
-              // Check for stream end markers
               if (dataContent === "[DONE]" || dataContent === "DONE") {
-                console.log("Stream ended with DONE marker");
                 break;
               }
 
-              // Skip empty data
               if (!dataContent) continue;
 
               try {
                 const payload = JSON.parse(dataContent);
 
-                // Handle different response formats
                 let piece = "";
-                if (payload.answer) {
-                  piece = payload.answer;
-                } else if (payload.text) {
-                  piece = payload.text;
-                } else if (payload.content) {
-                  piece = payload.content;
-                } else if (payload.delta && payload.delta.content) {
-                  piece = payload.delta.content;
-                } else if (typeof payload === "string") {
-                  piece = payload;
-                }
+                if (payload.answer) piece = payload.answer;
+                else if (payload.text) piece = payload.text;
+                else if (payload.content) piece = payload.content;
+                else if (payload.delta?.content) piece = payload.delta.content;
+                else if (typeof payload === "string") piece = payload;
 
                 if (piece) {
                   fullAnswer += piece;
-
-                  // Update UI progressively
                   setQuestions((prev) =>
                     prev.map((q) =>
                       q._id === tempId
@@ -197,13 +176,7 @@ const ChatPage = () => {
                     )
                   );
                 }
-              } catch (parseError) {
-                console.warn(
-                  "Failed to parse JSON chunk:",
-                  dataContent,
-                  parseError
-                );
-                // Sometimes the stream sends plain text, try adding it directly
+              } catch {
                 if (dataContent && !dataContent.startsWith("{")) {
                   fullAnswer += dataContent;
                   setQuestions((prev) =>
@@ -219,7 +192,6 @@ const ChatPage = () => {
           }
         }
       } finally {
-        // Always close the reader
         reader.releaseLock();
       }
 
@@ -240,14 +212,12 @@ const ChatPage = () => {
     } catch (error) {
       console.error("Streaming error:", error);
 
-      // Remove optimistic question on error
       setQuestions((prev) => prev.filter((q) => q._id !== tempId));
 
-      // Show appropriate error message
       if (error.name === "AbortError") {
         toast.error("Question was cancelled");
       } else if (error.message.includes("fetch")) {
-        toast.error("Connection error. Please check your internet connection.");
+        toast.error("Connection error. Please check your internet.");
       } else {
         toast.error(getApiMessage(error, "Failed to get answer"));
       }
@@ -262,9 +232,9 @@ const ChatPage = () => {
       if (!submitting && newQuestion.trim()) askQuestion();
     }
   };
+
   useEffect(() => {
     return () => {
-      // Cleanup any ongoing streams when component unmounts
       controllerRef.current?.abort();
     };
   }, []);
@@ -273,74 +243,24 @@ const ChatPage = () => {
   if (loading) {
     return (
       <section className="flex flex-col h-full min-h-[calc(100vh-85px)] p-4 gap-6">
-        {/* File Info Skeleton */}
-        <div className="flex justify-end">
-          <div className="flex items-center gap-3 rounded-lg p-3 w-[280px] bg-muted">
-            <Skeleton className="w-5 h-5 rounded" />
-            <div className="flex flex-col flex-1 min-w-0">
-              <Skeleton className="h-4 w-40 mb-2" />
-              <Skeleton className="h-3 w-20" />
-            </div>
-          </div>
-        </div>
-
-        {/* Summary Skeleton */}
-        <div>
-          <Skeleton className="h-5 w-32 mb-3" />
-          <Skeleton className="h-4 w-full mb-2" />
-          <Skeleton className="h-4 w-2/3" />
-        </div>
-
-        {/* Chat bubbles skeleton */}
-        <div className="flex flex-col gap-6">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="flex flex-col gap-3 max-w-full">
-              {/* User message */}
-              <div className="flex items-end justify-end gap-2">
-                <div className="flex flex-col items-end max-w-[80%]">
-                  <Skeleton className="h-5 w-48 mb-1 rounded-lg" />
-                  <Skeleton className="h-3 w-16" />
-                </div>
-                <Skeleton className="w-8 h-8 rounded-full" />
-              </div>
-              {/* Bot reply */}
-              <div className="flex items-start gap-2">
-                <Skeleton className="w-8 h-8 rounded-full" />
-                <div className="flex flex-col items-start max-w-[80%]">
-                  <Skeleton className="h-5 w-64 mb-1 rounded-lg" />
-                  <Skeleton className="h-3 w-20" />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* Skeletons... */}
       </section>
     );
   }
 
   if (!chat) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-100px)] px-4 text-center bg-gradient-to-b from-background to-muted/40 rounded-xl shadow-lg">
-        <div className="rounded-full bg-primary/10 p-5 mb-6 border border-primary/20">
-          <MessagesSquareIcon className="w-10 h-10 text-primary" />
-        </div>
-        <h2 className="text-3xl font-bold text-foreground mb-2">
-          Chat Unavailable
-        </h2>
-        <Button
-          variant="default"
-          onClick={() => navigate("/upload")}
-          className="mt-2 px-6 py-2"
-        >
-          Go Back to Dashboard
-        </Button>
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-100px)] px-4 text-center">
+        <MessagesSquareIcon className="w-10 h-10 text-primary" />
+        <h2 className="text-3xl font-bold">Chat Unavailable</h2>
+        <Button onClick={() => navigate("/upload")}>Go Back</Button>
       </div>
     );
   }
 
   return (
-    <section className="flex flex-col h-full min-h-[calc(100vh-85px)] bg-transparent">
-      <div className="flex-1 p-4 gap-6 overflow-y-auto mobile-scrollbar">
+     <section className="flex flex-col h-full min-h-[calc(100vh-85px)]">
+      <div className="flex-1 p-4 gap-6 overflow-y-auto">
         {/* File info */}
         <div className="flex items-center justify-end mb-4">
           <div className="flex items-center gap-3 rounded-lg p-3 w-[280px] bg-primary">
@@ -359,33 +279,83 @@ const ChatPage = () => {
           </div>
         </div>
 
-        {/* Summary with Markdown and Read More */}
-        <div className="mb-6">
-          <h2 className="font-semibold text-lg mb-1">Summary</h2>
-          {chat?.file?.summary ? (
-            <div className="text-muted-foreground">
-              <ReactMarkdown>
-                {showFullSummary
-                  ? chat.file.summary
-                  : chat.file.summary.length > 400
-                  ? chat.file.summary.slice(0, 400) + "..."
-                  : chat.file.summary}
-              </ReactMarkdown>
-              {chat.file.summary.length > 400 && (
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="mt-1 px-0"
-                  onClick={() => setShowFullSummary((v) => !v)}
-                >
-                  {showFullSummary ? "Show Less" : "Read More"}
-                </Button>
-              )}
-            </div>
-          ) : (
-            <p className="text-muted-foreground">No summary available.</p>
-          )}
-        </div>
+{/* Summary with Markdown and Read More */}
+<div className="mb-6">
+  <h2 className="font-semibold text-lg mb-1">Summary</h2>
+  {chat?.file?.summary ? (
+    <div className="text-muted-foreground">
+      <div
+        style={{
+          maxHeight: showFullSummary ? "1000px" : "120px",
+          overflow: "hidden",
+          transition: "max-height 0.4s cubic-bezier(0.4,0,0.2,1)",
+        }}
+      >
+        <ReactMarkdown
+          components={{
+            h1: ({ ...props }) => (
+              <h1
+                className="text-3xl font-extrabold mb-3 text-foreground"
+                {...props}
+              ></h1>
+            ),
+            h2: ({ ...props }) => (
+              <h2
+                className="text-2xl font-bold mb-2 text-foreground"
+                {...props}
+              ></h2>
+            ),
+            h3: ({ ...props }) => (
+              <h3
+                className="text-xl font-semibold mb-2 text-foreground"
+                {...props}
+              ></h3>
+            ),
+            h4: ({ ...props }) => (
+              <h4
+                className="text-lg font-semibold mb-2 text-foreground"
+                {...props}
+              ></h4>
+            ),
+            h5: ({ ...props }) => (
+              <h5
+                className="text-base font-semibold mb-2 text-foreground"
+                {...props}
+              ></h5>
+            ),
+            h6: ({ ...props }) => (
+              <h6
+                className="text-sm font-semibold mb-2 text-foreground"
+                {...props}
+              ></h6>
+            ),
+          }}
+        >
+          {showFullSummary
+            ? chat.file.summary
+            : chat.file.summary.length > 400
+            ? chat.file.summary.slice(0, 400) + "..."
+            : chat.file.summary}
+        </ReactMarkdown>
+      </div>
+
+      {chat.file.summary.length > 400 && (
+        <Button
+          variant="link"
+          size="sm"
+          className={`mt-1 px-0 transition-all duration-300 ${
+            showFullSummary ? "text-primary" : ""
+          }`}
+          onClick={() => setShowFullSummary((v) => !v)}
+        >
+          {showFullSummary ? "Show Less" : "Read More"}
+        </Button>
+      )}
+    </div>
+  ) : (
+    <p className="text-muted-foreground">No summary available.</p>
+  )}
+</div>
 
         {/* Q&A Flow */}
         <div className="flex flex-col gap-4">
