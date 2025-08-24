@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import Cookie from "js-cookie";
+import ReactMarkdown from "react-markdown";
 
 // Utility to format file size
 const formatFileSize = (bytes) => {
@@ -33,6 +34,7 @@ const TypingIndicator = ({ isStreaming }) => (
 );
 
 const ChatPage = () => {
+  const [showFullSummary, setShowFullSummary] = useState(false);
   const { id } = useParams();
   const [questions, setQuestions] = useState([]);
   const [chat, setChat] = useState(null);
@@ -357,12 +359,32 @@ const ChatPage = () => {
           </div>
         </div>
 
-        {/* Summary */}
+        {/* Summary with Markdown and Read More */}
         <div className="mb-6">
           <h2 className="font-semibold text-lg mb-1">Summary</h2>
-          <p className="text-muted-foreground">
-            {chat?.file?.summary || "No summary available."}
-          </p>
+          {chat?.file?.summary ? (
+            <div className="text-muted-foreground">
+              <ReactMarkdown>
+                {showFullSummary
+                  ? chat.file.summary
+                  : chat.file.summary.length > 400
+                  ? chat.file.summary.slice(0, 400) + "..."
+                  : chat.file.summary}
+              </ReactMarkdown>
+              {chat.file.summary.length > 400 && (
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="mt-1 px-0"
+                  onClick={() => setShowFullSummary((v) => !v)}
+                >
+                  {showFullSummary ? "Show Less" : "Read More"}
+                </Button>
+              )}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">No summary available.</p>
+          )}
         </div>
 
         {/* Q&A Flow */}
@@ -395,7 +417,7 @@ const ChatPage = () => {
                   <div className="flex flex-col items-start max-w-[80%]">
                     <div className="bg-muted px-3 py-2 rounded-lg break-words whitespace-pre-wrap">
                       {q.answer ? (
-                        q.answer
+                        <ReactMarkdown>{q.answer}</ReactMarkdown>
                       ) : q.optimistic || q.streaming ? (
                         <TypingIndicator isStreaming={q.streaming} />
                       ) : (
