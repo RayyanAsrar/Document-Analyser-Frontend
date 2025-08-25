@@ -16,16 +16,16 @@ const UserMenu = () => {
     logout();
   };
   const Buttons = [
-    {
-      classNames:
-        "w-full flex items-center gap-2 px-4 py-2 rounded-lg text-left hover:bg-muted cursor-pointer",
-      onclickFunc: () => {
-        setTheme(theme === "dark" ? "light" : "dark");
-        setOpen(false);
-      },
-      title: theme === "dark" ? "Light Mode" : "Dark Mode",
-      icon: theme === "dark" ? Sun : Moon,
-    },
+    // {
+    //   classNames:
+    //     "w-full flex items-center gap-2 px-4 py-2 rounded-lg text-left hover:bg-muted cursor-pointer",
+    //   onclickFunc: () => {
+    //     setTheme(theme === "dark" ? "light" : "dark");
+    //     setOpen(false);
+    //   },
+    //   title: theme === "dark" ? "Light Mode" : "Dark Mode",
+    //   icon: theme === "dark" ? Sun : Moon,
+    // },
     // {
     //   classNames:
     //     "w-full flex items-center gap-2 px-4 py-2 rounded-lg text-left hover:bg-muted cursor-pointer",
@@ -62,33 +62,35 @@ const UserMenu = () => {
       </div>
 
       <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-900 border border-border rounded-md shadow-lg z-50"
-          >
-            <div className="p-2 space-y-1 text-sm">
-              {Buttons.map((button, index) => {
-                const IconComponent = button.icon;
-                return (
-                  <Button
-                    key={index}
-                    variant="ghost"
-                    className={button.classNames}
-                    onClick={button.onclickFunc}
-                  >
-                    <IconComponent className="w-4 h-4" />
-                    {button.title}
-                  </Button>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+  {open && (
+    <motion.div
+  initial={{ opacity: 0, y: 10 }}
+  animate={{ opacity: 1, y: 0 }}
+  exit={{ opacity: 0, y: 8 }}
+  transition={{ duration: 0.2 }}
+  className="absolute bottom-full left-0 mb-2 w-48 bg-white dark:bg-zinc-900 border border-border rounded-md shadow-lg z-50"
+>
+  <div className="p-2 space-y-1 text-sm">
+    {Buttons.map((button, index) => {
+      const IconComponent = button.icon;
+      return (
+        <Button
+          key={index}
+          variant="ghost"
+          className={button.classNames}
+          onClick={button.onclickFunc}
+        >
+          <IconComponent className="w-4 h-4" />
+          {button.title}
+        </Button>
+      );
+    })}
+  </div>
+</motion.div>
+
+  )}
+</AnimatePresence>
+
     </div>
   );
 };

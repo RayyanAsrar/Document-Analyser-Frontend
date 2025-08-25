@@ -152,7 +152,7 @@ const DashboardLayout = () => {
           </SidebarGroup>
         </SidebarContent>
 
-        <SidebarFooter className="sticky bottom-0 z-20 p-4">
+        {/* <SidebarFooter className="sticky bottom-0 z-20 p-4">
           <Separator />
           <SidebarMenuButton
             tooltip="Logout"
@@ -163,7 +163,7 @@ const DashboardLayout = () => {
             <LogOut className="w-4 h-4" />
             <span className="text-sm">Logout</span>
           </SidebarMenuButton>
-        </SidebarFooter>
+        </SidebarFooter> */}
       </AppSidebar>
 
       <SidebarInset>
@@ -172,7 +172,7 @@ const DashboardLayout = () => {
             aria-label="Toggle sidebar"
             onClick={() => setOpen(!open)}
           />
-          <UserMenu />
+          {/* <UserMenu /> */}
         </div>
         <div className="flex flex-1 max-h-[calc(100vh-5rem)] flex-col gap-4 p-4">
           <Outlet />
