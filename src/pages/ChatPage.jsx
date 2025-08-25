@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef } from "react";
+import React,{ useCallback, useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api, { getApiMessage } from "../lib/apiClient";
 import { toast } from "sonner";
@@ -34,7 +34,6 @@ const TypingIndicator = ({ isStreaming }) => (
 );
 
 const ChatPage = () => {
-  const [showFullSummary, setShowFullSummary] = useState(false);
   const { id } = useParams();
   const [questions, setQuestions] = useState([]);
   const [chat, setChat] = useState(null);
@@ -279,83 +278,58 @@ const ChatPage = () => {
           </div>
         </div>
 
-{/* Summary with Markdown and Read More */}
-<div className="mb-6">
-  <h2 className="font-semibold text-lg mb-1">Summary</h2>
-  {chat?.file?.summary ? (
-    <div className="text-muted-foreground">
-      <div
-        style={{
-          maxHeight: showFullSummary ? "1000px" : "120px",
-          overflow: "hidden",
-          transition: "max-height 0.4s cubic-bezier(0.4,0,0.2,1)",
-        }}
-      >
-        <ReactMarkdown
-          components={{
-            h1: ({ ...props }) => (
-              <h1
-                className="text-3xl font-extrabold mb-3 text-foreground"
-                {...props}
-              ></h1>
-            ),
-            h2: ({ ...props }) => (
-              <h2
-                className="text-2xl font-bold mb-2 text-foreground"
-                {...props}
-              ></h2>
-            ),
-            h3: ({ ...props }) => (
-              <h3
-                className="text-xl font-semibold mb-2 text-foreground"
-                {...props}
-              ></h3>
-            ),
-            h4: ({ ...props }) => (
-              <h4
-                className="text-lg font-semibold mb-2 text-foreground"
-                {...props}
-              ></h4>
-            ),
-            h5: ({ ...props }) => (
-              <h5
-                className="text-base font-semibold mb-2 text-foreground"
-                {...props}
-              ></h5>
-            ),
-            h6: ({ ...props }) => (
-              <h6
-                className="text-sm font-semibold mb-2 text-foreground"
-                {...props}
-              ></h6>
-            ),
-          }}
-        >
-          {showFullSummary
-            ? chat.file.summary
-            : chat.file.summary.length > 400
-            ? chat.file.summary.slice(0, 400) + "..."
-            : chat.file.summary}
-        </ReactMarkdown>
-      </div>
-
-      {chat.file.summary.length > 400 && (
-        <Button
-          variant="link"
-          size="sm"
-          className={`mt-1 px-0 transition-all duration-300 ${
-            showFullSummary ? "text-primary" : ""
-          }`}
-          onClick={() => setShowFullSummary((v) => !v)}
-        >
-          {showFullSummary ? "Show Less" : "Read More"}
-        </Button>
-      )}
-    </div>
-  ) : (
-    <p className="text-muted-foreground">No summary available.</p>
-  )}
-</div>
+        {/* Summary - Full Display */}
+        <div className="mb-6">
+          <h2 className="font-semibold text-lg mb-1">Summary</h2>
+          {chat?.file?.summary ? (
+            <div className="text-muted-foreground">
+              <ReactMarkdown
+                components={{
+                  h1: ({ ...props }) => (
+                    <h1
+                      className="text-3xl font-extrabold mb-3 text-foreground"
+                      {...props}
+                    ></h1>
+                  ),
+                  h2: ({ ...props }) => (
+                    <h2
+                      className="text-2xl font-bold mb-2 text-foreground"
+                      {...props}
+                    ></h2>
+                  ),
+                  h3: ({ ...props }) => (
+                    <h3
+                      className="text-xl font-semibold mb-2 text-foreground"
+                      {...props}
+                    ></h3>
+                  ),
+                  h4: ({ ...props }) => (
+                    <h4
+                      className="text-lg font-semibold mb-2 text-foreground"
+                      {...props}
+                    ></h4>
+                  ),
+                  h5: ({ ...props }) => (
+                    <h5
+                      className="text-base font-semibold mb-2 text-foreground"
+                      {...props}
+                    ></h5>
+                  ),
+                  h6: ({ ...props }) => (
+                    <h6
+                      className="text-sm font-semibold mb-2 text-foreground"
+                      {...props}
+                    ></h6>
+                  ),
+                }}
+              >
+                {chat.file.summary}
+              </ReactMarkdown>
+            </div>
+          ) : (
+            <p className="text-muted-foreground">No summary available.</p>
+          )}
+        </div>
 
         {/* Q&A Flow */}
         <div className="flex flex-col gap-4">
