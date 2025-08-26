@@ -1,6 +1,6 @@
-import { FilesIcon, LogOut, PenBoxIcon } from "lucide-react";
+import { FilesIcon, LogOut, PenBoxIcon, Sun , Moon} from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, NavLink, Outlet } from "react-router";
+import { Link, NavLink, Outlet, useNavigate } from "react-router";
 import { Skeleton } from "../components/ui/skeleton";
 import AppSidebar from "../components/AppSidebar";
 import {
@@ -23,6 +23,8 @@ import { useAuth } from "../context/AuthContext";
 import api from "../lib/apiClient";
 import Cookie from "js-cookie";
 import { useChats } from "../context/ChatContext";
+import { Button } from "../components/ui/button";
+import { useTheme } from "../context/ThemeProvider";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(true);
@@ -30,6 +32,13 @@ const DashboardLayout = () => {
   const [loadingChats, setLoadingChats] = useState(true);
   const token = Cookie.get("token");
   const { setChats, chats } = useChats();
+  const { theme, setTheme } = useTheme();
+ 
+  const navigate = useNavigate();
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -173,6 +182,20 @@ const DashboardLayout = () => {
             onClick={() => setOpen(!open)}
           />
           {/* <UserMenu /> */}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            className=""
+          >
+            {theme === "dark" ? (
+              <Sun className="h-5 w-5 text-yellow-400" />
+            ) : (
+              <Moon className="h-5 w-5 text-blue-600" />
+            )}
+          </Button>
         </div>
         <div className="flex flex-1 max-h-[calc(100vh-5rem)] flex-col gap-4 p-4">
           <Outlet />
