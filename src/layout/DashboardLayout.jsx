@@ -176,7 +176,7 @@ const DashboardLayout = () => {
                     chats.map((chat) => (
                       <div
                         key={chat._id}
-                        className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-muted/50 transition-colors group"
+                        className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-muted/50 transition-colors group/chat"
                       >
                         {/* Chat NavLink */}
                         <NavLink
@@ -194,12 +194,13 @@ const DashboardLayout = () => {
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button
-                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-muted"
+                              className="opacity-0 group-hover/chat:opacity-100 transition-opacity p-1 rounded-md hover:bg-muted"
                               aria-label="Chat actions"
                             >
                               <MoreHorizontal className="w-4 h-4" />
                             </button>
                           </DropdownMenuTrigger>
+
                           <DropdownMenuContent align="end" className="w-32">
                             <DropdownMenuItem
                               className="cursor-pointer"
