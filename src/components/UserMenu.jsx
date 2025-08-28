@@ -4,12 +4,10 @@ import { ChevronsUpDown, LogOut } from "lucide-react";
 import { Button } from "./ui/button";
 import CustomAvatar from "./CustomAvatar";
 import { useAuth } from "../context/AuthContext";
-import { useTheme } from "../context/ThemeProvider";
 
 const UserMenu = () => {
   const [open, setOpen] = useState(false);
   const { logout, user } = useAuth();
-  const { theme, setTheme } = useTheme();
   const menuRef = useRef(null);
 
   const handleLogout = () => {
@@ -66,7 +64,7 @@ const UserMenu = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.2 }}
-            className="absolute bottom-full left-0 mb-2 w-48 bg-white dark:bg-zinc-900 border border-border rounded-md shadow-lg z-50"
+            className="absolute bottom-full left-0 mb-2 w-full bg-white dark:bg-zinc-900 border border-border rounded-md shadow-lg z-50"
           >
             <div className="p-2 space-y-1 text-sm">
               {Buttons.map((button, index) => {

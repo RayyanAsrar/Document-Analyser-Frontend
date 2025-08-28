@@ -1,11 +1,12 @@
-import { FilesIcon, LogOut, PenBoxIcon, Sun , Moon} from "lucide-react";
-import { useEffect, useState } from "react";
-import { Link, NavLink, Outlet, useNavigate } from "react-router";
-import { Skeleton } from "../components/ui/skeleton";
+import Cookie from "js-cookie";
+import { Archive, FilesIcon, Moon, PenBoxIcon, Sun, Trash } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Link, NavLink, Outlet } from "react-router";
 import AppSidebar from "../components/AppSidebar";
+import { Button } from "../components/ui/button";
+import { Separator } from "../components/ui/separator";
 import {
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -17,68 +18,103 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "../components/ui/sidebar";
-import UserMenu from "../components/UserMenu";
-import { Separator } from "../components/ui/separator";
-import { useAuth } from "../context/AuthContext";
-import api from "../lib/apiClient";
-import Cookie from "js-cookie";
+import { MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import { Skeleton } from "../components/ui/skeleton";
 import { useChats } from "../context/ChatContext";
-import { Button } from "../components/ui/button";
 import { useTheme } from "../context/ThemeProvider";
+import api from "../lib/apiClient";
+import { toast } from "sonner";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(true);
-  const { logout } = useAuth();
   const [loadingChats, setLoadingChats] = useState(true);
   const token = Cookie.get("token");
   const { setChats, chats } = useChats();
   const { theme, setTheme } = useTheme();
- 
-  const navigate = useNavigate();
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
-  useEffect(() => {
-    const fetchChats = async () => {
-      try {
-        setLoadingChats(true);
-        const { data } = await api.get("/chat", {
+  const fetchChats = useCallback(async () => {
+    try {
+      setLoadingChats(true);
+      const { data } = await api.get("/chat", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setChats(data.data || []);
+    } catch (error) {
+      console.error("Error fetching chats:", error);
+    } finally {
+      setLoadingChats(false);
+    }
+  }, [token, setChats]);
+
+  const handleDelete = async (chatId, isDeleted) => {
+    try {
+      await api.put(
+        `/chat/${chatId}`,
+        {
+          isDeleted: !isDeleted,
+        },
+        {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        });
-        setChats(data.data || []);
-      } catch (error) {
-        console.error("Error fetching chats:", error);
-      } finally {
-        setLoadingChats(false);
-      }
-    };
-    fetchChats();
-  }, [token, setChats]);
+        }
+      );
 
-  const handleLogout = () => {
-    logout();
+      setChats((prevChats) => prevChats.filter((chat) => chat._id !== chatId));
+      toast.success("Chat deleted successfully");
+    } catch (error) {
+      console.error("Error deleting chat:", error);
+      toast.error("Error deleting chat");
+    }
   };
+  const handleArchive = async (chatId, isArchived) => {
+    try {
+      await api.put(
+        `/chat/archive/${chatId}`,
+        {
+          isArchived: !isArchived,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setChats((prevChats) =>
+        prevChats.map((chat) =>
+          chat._id === chatId ? { ...chat, isArchived: !isArchived } : chat
+        )
+      );
+      toast.success("Chat archived successfully");
+    } catch (error) {
+      console.error("Error archiving chat:", error);
+      toast.error("Error archiving chat");
+    }
+  };
+
+  useEffect(() => {
+    fetchChats();
+  }, [fetchChats]);
 
   return (
     <SidebarProvider open={open} onOpenChange={setOpen}>
       <AppSidebar>
         <SidebarContent>
           <SidebarHeader className="sticky top-0 z-30 bg-background pb-2">
-            {/* <div className="flex items-center space-x-2 animate-in slide-in-from-left duration-500">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center hover:scale-110 transition-transform duration-200">
-                <span className="text-primary-foreground font-bold text-sm">
-                  DA
-                </span>
-              </div>
-              <span className="font-semibold text-lg truncate">
-                Document Analyzer
-              </span>
-            </div> */}
-
             <div className="flex justify-center items-center">
               <Link to="/">
                 <img
@@ -138,21 +174,54 @@ const DashboardLayout = () => {
                     </span>
                   ) : (
                     chats.map((chat) => (
-                      <NavLink
+                      <div
                         key={chat._id}
-                        to={`/chat/${chat._id}`}
-                        className={({ isActive }) =>
-                          `rounded-lg py-2 px-2 truncate transition-colors ${
-                            isActive
-                              ? "bg-muted font-medium"
-                              : "hover:bg-muted/50"
-                          }`
-                        }
+                        className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-muted/50 transition-colors group"
                       >
-                        <SidebarMenuSubButton className="w-full bg-none text-left truncate">
+                        {/* Chat NavLink */}
+                        <NavLink
+                          to={`/chat/${chat._id}`}
+                          className={({ isActive }) =>
+                            `flex-1 truncate rounded-md px-2 py-1 ${
+                              isActive ? "bg-muted font-medium" : ""
+                            }`
+                          }
+                        >
                           {chat?.file?.name?.slice(0, 30) || "Untitled Chat"}
-                        </SidebarMenuSubButton>
-                      </NavLink>
+                        </NavLink>
+
+                        {/* Dropdown Actions */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-muted"
+                              aria-label="Chat actions"
+                            >
+                              <MoreHorizontal className="w-4 h-4" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-32">
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() =>
+                                handleArchive(chat._id, chat.isArchived)
+                              }
+                            >
+                              <Archive className="mr-2 h-4 w-4" />
+                              Archive
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-red-600 focus:text-red-600 cursor-pointer"
+                              onClick={() =>
+                                handleDelete(chat._id, chat.isDeleted)
+                              }
+                            >
+                              <Trash className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     ))
                   )}
                 </div>
@@ -160,19 +229,6 @@ const DashboardLayout = () => {
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
-
-        {/* <SidebarFooter className="sticky bottom-0 z-20 p-4">
-          <Separator />
-          <SidebarMenuButton
-            tooltip="Logout"
-            onClick={handleLogout}
-            variant="ghost"
-            className="w-full flex items-center justify-center gap-2 cursor-pointer hover:bg-destructive/60 text-red-600"
-          >
-            <LogOut className="w-4 h-4" />
-            <span className="text-sm">Logout</span>
-          </SidebarMenuButton>
-        </SidebarFooter> */}
       </AppSidebar>
 
       <SidebarInset>
@@ -181,7 +237,6 @@ const DashboardLayout = () => {
             aria-label="Toggle sidebar"
             onClick={() => setOpen(!open)}
           />
-          {/* <UserMenu /> */}
           <Button
             type="button"
             variant="ghost"

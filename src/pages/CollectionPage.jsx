@@ -16,16 +16,24 @@ import {
 } from "../components/ui/dropdown-menu";
 import { Button } from "../components/ui/button";
 import { Skeleton } from "../components/ui/skeleton";
-import { MoreVertical, Eye, Download, MessageSquare, FileX } from "lucide-react";
+import {
+  MoreVertical,
+  Eye,
+  Download,
+  MessageSquare,
+  FileX,
+} from "lucide-react";
 import api from "../lib/apiClient";
 import Cookie from "js-cookie";
 import { useNavigate } from "react-router-dom";
+import { useChats } from "../context/ChatContext";
 
 const CollectionPage = () => {
   const [search, setSearch] = useState("");
   const [files, setFiles] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { chats } = useChats();
   const token = Cookie.get("token");
   const navigate = useNavigate();
 
@@ -40,6 +48,8 @@ const CollectionPage = () => {
         });
         setFiles(data.data);
         setSelectedFiles(data.data);
+
+        console.log(data.data);
       } catch (error) {
         console.error("Error fetching files:", error);
       } finally {
@@ -47,7 +57,7 @@ const CollectionPage = () => {
       }
     };
     fetchFiles();
-  }, [token]);
+  }, [token, chats]);
 
   useEffect(() => {
     const filteredFiles = files.filter((file) =>
