@@ -85,8 +85,27 @@ const CollectionPage = () => {
   };
 
   const handleDownload = async (file) => {
-    console.log("Download file:", file);
-    // Same logic as handleView but instead force a download via blob if needed
+    try {
+      // Request download URL from backend
+      const { data } = await api.post(
+        "/upload/download",
+        { key: file.key },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const { url } = data.data;
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const link = document.createElement("a");
+      link.href = window.URL.createObjectURL(blob);
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+    }
   };
 
   const handleShowInChat = (file) => {
