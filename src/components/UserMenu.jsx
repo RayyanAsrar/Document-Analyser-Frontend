@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronsUpDown, LogOut, Settings, Sun, Moon } from "lucide-react";
+import { ChevronsUpDown, LogOut } from "lucide-react";
 import { Button } from "./ui/button";
 import CustomAvatar from "./CustomAvatar";
-import Cookie from "js-cookie";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeProvider";
 
@@ -11,31 +10,13 @@ const UserMenu = () => {
   const [open, setOpen] = useState(false);
   const { logout, user } = useAuth();
   const { theme, setTheme } = useTheme();
+  const menuRef = useRef(null);
 
   const handleLogout = () => {
     logout();
   };
+
   const Buttons = [
-    {
-      classNames:
-        "w-full flex items-center gap-2 px-4 py-2 rounded-lg text-left hover:bg-muted cursor-pointer",
-      onclickFunc: () => {
-        setTheme(theme === "dark" ? "light" : "dark");
-        setOpen(false);
-      },
-      title: theme === "dark" ? "Light Mode" : "Dark Mode",
-      icon: theme === "dark" ? Sun : Moon,
-    },
-    // {
-    //   classNames:
-    //     "w-full flex items-center gap-2 px-4 py-2 rounded-lg text-left hover:bg-muted cursor-pointer",
-    //   onclickFunc: () => {
-    //     navigate("/upload");
-    //     setOpen(false);
-    //   },
-    //   title: "Settings",
-    //   icon: Settings,
-    // },
     {
       classNames:
         "w-full flex items-center gap-2 px-4 py-2 rounded-lg text-left text-red-600 cursor-pointer dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30",
@@ -47,8 +28,25 @@ const UserMenu = () => {
 
   const name = user?.name || user?.username;
 
+  // 🔹 Close on outside click
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
+
   return (
-    <div className="relative w-max">
+    <div ref={menuRef} className="relative w-max">
       <div
         onClick={() => setOpen((prev) => !prev)}
         className="flex items-center gap-3 cursor-pointer hover:bg-muted px-3 py-2 rounded-md transition"
@@ -64,11 +62,11 @@ const UserMenu = () => {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
+            exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-900 border border-border rounded-md shadow-lg z-50"
+            className="absolute bottom-full left-0 mb-2 w-48 bg-white dark:bg-zinc-900 border border-border rounded-md shadow-lg z-50"
           >
             <div className="p-2 space-y-1 text-sm">
               {Buttons.map((button, index) => {
