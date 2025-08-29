@@ -22,16 +22,10 @@ export default function SignUpPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (password !== confirmPassword) {
-      toast.error("❌ Passwords do not match");
-      return;
-    }
 
     setLoading(true);
     try {
@@ -131,20 +125,6 @@ export default function SignUpPage() {
                 required
                 minLength={6}
                 maxLength={16}
-                className="rounded-lg border-border focus:ring-2 focus:ring-primary/30"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="font-medium">
-                Confirm Password
-              </Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="Confirm your password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
                 className="rounded-lg border-border focus:ring-2 focus:ring-primary/30"
               />
             </div>
