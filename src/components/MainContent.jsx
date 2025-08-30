@@ -62,13 +62,11 @@ export function MainContent() {
 
       const { chat } = data.data;
       const message = data.message;
-      console.log(chat);
       addChats({...chat, file: {name: file.name}});
       const chatId = chat?._id;
       toast.success(message);
       navigate(`/chat/${chatId}`);
     } catch (err) {
-      console.log("error");
       toast.error(getApiMessage(err, "Upload failed"));
     } finally {
       setLoading(false);

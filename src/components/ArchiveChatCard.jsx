@@ -8,49 +8,46 @@ import {
 import { EllipsisVertical } from "lucide-react";
 
 const ArchiveChatCard = ({ chat, onUnarchive, onDelete }) => {
-  const { file, summary, createdAt } = chat;
+  const { file, createdAt } = chat;
 
   return (
-    <div className="border border-gray-200 bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="border  rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="flex justify-between items-start">
-        {/* File Info */}
         <div>
-          <h3 className="font-semibold text-lg text-gray-800 truncate">
+          <h3 className="font-semibold text-lg  truncate">
             {file?.name || "Untitled Document"}
           </h3>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs mt-1">
             Uploaded: {new Date(file?.createdAt || createdAt).toLocaleString()}
           </p>
         </div>
 
-        {/* Actions */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-              <EllipsisVertical className="w-5 h-5 text-gray-600" />
+            <button className="p-2 transition-colors cursor-pointer">
+              <EllipsisVertical className="w-5 h-5" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuItem
-              onClick={() => onUnarchive(chat._id)}
+              onClick={() => onUnarchive(chat._id, chat.isArchived)}
               className="cursor-pointer"
             >
-              Unarchive chat
+              Unarchive
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => onDelete(chat._id)}
+              onClick={() => onDelete(chat._id, chat.isDeleted)}
               className="text-red-500 cursor-pointer"
             >
-              Delete chat
+              Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      {/* Summary */}
       <div className="mt-3">
-        <p className="text-sm text-gray-700 line-clamp-3">
-          {summary || "No summary available."}
+        <p className="text-sm text-muted-foreground line-clamp-3">
+          {file.summary || "No summary available."} ...
         </p>
       </div>
     </div>

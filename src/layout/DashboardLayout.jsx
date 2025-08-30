@@ -31,12 +31,14 @@ import { useChats } from "../context/ChatContext";
 import { useTheme } from "../context/ThemeProvider";
 import api from "../lib/apiClient";
 import { toast } from "sonner";
+import { useArchiveChats } from "../context/ArchiveChatContext";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(true);
   const [loadingChats, setLoadingChats] = useState(true);
   const token = Cookie.get("token");
   const { setChats, chats } = useChats();
+  const { archivedChats } = useArchiveChats();
   const { theme, setTheme } = useTheme();
 
   const toggleTheme = () => {
@@ -94,7 +96,7 @@ const DashboardLayout = () => {
         }
       );
 
-      fetchChats(); 
+      fetchChats();
       toast.success("Chat archived successfully");
     } catch (error) {
       console.error("Error archiving chat:", error);

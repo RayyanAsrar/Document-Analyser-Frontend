@@ -12,14 +12,12 @@ export function ThemeProvider({
   ...props
 }) {
   const [theme, setThemeState] = useState(() => {
-    // Initialize from localStorage if available (safe in browsers)
     if (typeof window === "undefined") return defaultTheme;
     try {
       const stored = localStorage.getItem(storageKey);
       if (stored === "dark" || stored === "light" || stored === "system")
         return stored;
     } catch (e) {
-      // ignore localStorage errors (e.g. privacy mode)
       console.log(e);
     }
     return defaultTheme;

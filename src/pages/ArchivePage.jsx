@@ -1,14 +1,15 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import api, { getApiMessage } from "../lib/apiClient";
 import Cookie from "js-cookie";
 import { useChats } from "../context/ChatContext";
 import ArchiveChatCard from "../components/ArchiveChatCard";
+import { useArchiveChats } from "../context/ArchiveChatContext";
 
 const ArchivePage = () => {
   const token = Cookie.get("token");
-  const { chats } = useChats();
-  const [archivedChats, setArchivedChats] = useState([]);
+  const { chats, refetchChats } = useChats();
+  const { archivedChats, setArchivedChats } = useArchiveChats();
 
   const fetchChats = useCallback(async () => {
     try {
@@ -22,48 +23,72 @@ const ArchivePage = () => {
     } catch (error) {
       toast.error(getApiMessage(error));
     }
-  }, [token]);
+  }, [token, setArchivedChats]);
 
   useEffect(() => {
     fetchChats();
   }, [chats, fetchChats]);
 
-  const handleUnarchive = async (chatId) => {
+  const handleDelete = async (chatId, isDeleted) => {
     try {
-      await api.post(`/chat/${chatId}/unarchive`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      toast.success("Chat unarchived successfully.");
-      fetchChats();
+      await api.put(
+        `/chat/${chatId}`,
+        {
+          isDeleted: !isDeleted,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setArchivedChats((prevChats) =>
+        prevChats.filter((chat) => chat._id !== chatId)
+      );
+      toast.success("Chat deleted successfully");
     } catch (error) {
-      toast.error(getApiMessage(error));
+      console.error("Error deleting chat:", error);
+      toast.error("Error deleting chat");
     }
   };
-
-  const handleDelete = async (chatId) => {
+  const handleUnarchive = async (chatId, isArchived) => {
     try {
-      await api.delete(`/chat/${chatId}/delete`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      toast.success("Chat deleted successfully.");
-      fetchChats();
+      await api.put(
+        `/chat/archive/${chatId}`,
+        {
+          isArchived: !isArchived,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      await refetchChats();
+      toast.success("Chat archived successfully");
     } catch (error) {
-      toast.error(getApiMessage(error));
+      console.error("Error archiving chat:", error);
+      toast.error("Error archiving chat");
     }
   };
 
   return (
-    <section className="max-w-4xl mx-auto py-10 px-4">
-      <h2 className="text-3xl font-bold text-gray-800 mb-8">
-        📂 Archived Chats
-      </h2>
+    <section className="p-4">
+      <div className="p-4">
+        <h1 className="text-2xl font-bold">Archived Chats</h1>
+        <p className="text-sm text-muted-foreground">
+          Manage your archived chats and conversations
+        </p>
+      </div>
 
       {archivedChats.length === 0 ? (
-        <div className="text-center text-gray-500 py-12 bg-gray-50 rounded-xl border">
+        <div className="text-center py-12  rounded-xl border">
           No archived chats found.
         </div>
       ) : (
-        <div className="grid gap-5">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {archivedChats.map((chat) => (
             <ArchiveChatCard
               key={chat._id}
