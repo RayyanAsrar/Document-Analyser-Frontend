@@ -179,7 +179,7 @@ const UserUpdateModal = ({ open, onOpenChange }) => {
                 Choose File
               </label>
               {file ? (
-                <span className="text-sm text-secondary font-semibold truncate max-w-[200px]">
+                <span className="text-sm font-semibold truncate max-w-[200px]">
                   {file.name}
                 </span>
               ) : (
