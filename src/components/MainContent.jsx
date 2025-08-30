@@ -122,7 +122,7 @@ export function MainContent() {
         <Greetings />
       </div>
 
-      <div className="flex-1 flex flex-col gap-4 items-center justify-center m-10">
+      <div className="flex-1 flex flex-col gap-4 items-center justify-center my-10">
         {/* Drag & Drop / File Info Card */}
         <Card
           className={cn(

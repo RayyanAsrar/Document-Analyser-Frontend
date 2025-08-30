@@ -19,6 +19,7 @@ function App() {
         const { data } = await api.get("/user/current", {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log("Current user data:", data);
         login(data.data);
       } catch (error) {
         console.error("Error fetching current user:", error);
