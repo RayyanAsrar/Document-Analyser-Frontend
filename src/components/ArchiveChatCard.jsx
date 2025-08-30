@@ -11,10 +11,19 @@ const ArchiveChatCard = ({ chat, onUnarchive, onDelete }) => {
   const { file, createdAt } = chat;
 
   return (
-    <div className="border  rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="border rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="flex justify-between items-start">
-        <div>
-          <h3 className="font-semibold text-lg  truncate">
+        <div className="flex-1 min-w-0">
+          <h3
+            className="font-semibold text-lg truncate"
+            style={{
+              maxWidth: "220px",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+            title={file?.name || "Untitled Document"}
+          >
             {file?.name || "Untitled Document"}
           </h3>
           <p className="text-xs mt-1">

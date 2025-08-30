@@ -31,14 +31,12 @@ import { useChats } from "../context/ChatContext";
 import { useTheme } from "../context/ThemeProvider";
 import api from "../lib/apiClient";
 import { toast } from "sonner";
-import { useArchiveChats } from "../context/ArchiveChatContext";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(true);
   const [loadingChats, setLoadingChats] = useState(true);
   const token = Cookie.get("token");
   const { setChats, chats } = useChats();
-  const { archivedChats } = useArchiveChats();
   const { theme, setTheme } = useTheme();
 
   const toggleTheme = () => {
@@ -96,7 +94,8 @@ const DashboardLayout = () => {
         }
       );
 
-      fetchChats();
+      setChats((prevChats) => prevChats.filter((chat) => chat._id !== chatId));
+      // await refetchChats();
       toast.success("Chat archived successfully");
     } catch (error) {
       console.error("Error archiving chat:", error);
@@ -158,7 +157,6 @@ const DashboardLayout = () => {
               <SidebarMenu className="overflow-y-auto mobile-scrollbar">
                 <div className="flex flex-col gap-1">
                   {loadingChats ? (
-                    // Skeleton UI while loading
                     <>
                       {[...Array(5)].map((_, i) => (
                         <div key={i} className="px-2 py-2">
@@ -176,7 +174,6 @@ const DashboardLayout = () => {
                         key={chat._id}
                         className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-muted/50 transition-colors group/chat"
                       >
-                        {/* Chat NavLink */}
                         <NavLink
                           to={`/chat/${chat._id}`}
                           className={({ isActive }) =>
@@ -192,7 +189,7 @@ const DashboardLayout = () => {
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button
-                              className="opacity-0 group-hover/chat:opacity-100 transition-opacity p-1 rounded-md hover:bg-muted"
+                              className="opacity-0 group-hover/chat:opacity-100 transition-opacity p-1 rounded-md hover:bg-muted cursor-pointer"
                               aria-label="Chat actions"
                             >
                               <MoreHorizontal className="w-4 h-4" />

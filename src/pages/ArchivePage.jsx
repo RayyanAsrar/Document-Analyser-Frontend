@@ -48,8 +48,8 @@ const ArchivePage = () => {
       );
       toast.success("Chat deleted successfully");
     } catch (error) {
-      console.error("Error deleting chat:", error);
-      toast.error("Error deleting chat");
+      const message = getApiMessage(error)
+      toast.error(message);
     }
   };
   const handleUnarchive = async (chatId, isArchived) => {
@@ -67,10 +67,10 @@ const ArchivePage = () => {
       );
 
       await refetchChats();
-      toast.success("Chat archived successfully");
+      toast.success("Chat unarchive successfully");
     } catch (error) {
-      console.error("Error archiving chat:", error);
-      toast.error("Error archiving chat");
+      const message = getApiMessage(error)
+      toast.error(message);
     }
   };
 
