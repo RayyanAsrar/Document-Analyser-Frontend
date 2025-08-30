@@ -11,6 +11,7 @@ import ChatPage from "../pages/ChatPage";
 import CollectionPage from "../pages/CollectionPage";
 import AuthLayout from "../layout/AuthLayout";
 import ArchivePage from "../pages/ArchivePage";
+import Preferences from "../pages/Preferences";
 
 const AppRouter = () => {
   return (
@@ -42,6 +43,7 @@ const AppRouter = () => {
         <Route path="/chat/:id" element={<ChatPage />} />
         <Route path="/collection" element={<CollectionPage />} />
         <Route path="/archive" element={<ArchivePage />} />
+        <Route path="/preferences" element={<Preferences />} />
       </Route>
     </Routes>
   );

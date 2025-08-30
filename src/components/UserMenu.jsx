@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Archive, ChevronsUpDown, LogOut } from "lucide-react";
+import { Archive, ChevronsUpDown, LogOut, Settings } from "lucide-react";
 import { Button } from "./ui/button";
 import CustomAvatar from "./CustomAvatar";
 import { useAuth } from "../context/AuthContext";
@@ -23,6 +23,13 @@ const UserMenu = () => {
       onclickFunc: () => navigate("/archive"),
       title: "Archived",
       icon: Archive,
+    },
+    {
+      classNames:
+        "w-full flex items-center gap-2 px-4 py-2 rounded-lg text-left  cursor-pointer ",
+      onclickFunc: () => navigate("/preferences"),
+      title: "Preferences",
+      icon: Settings,
     },
     {
       classNames:
