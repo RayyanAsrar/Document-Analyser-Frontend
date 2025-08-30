@@ -12,15 +12,19 @@ import {
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useState } from "react";
+import Cookie from "js-cookie";
+import api from "../lib/apiClient";
+import { toast } from "sonner";
 
 const UserUpdateModal = ({ open, onOpenChange }) => {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(user?.profileImage || "");
   const [name, setName] = useState(user?.name || "");
   const [username, setUsername] = useState(user?.username || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+  const token = Cookie.get("token");
 
   const handleFileChange = (e) => {
     const files = e.target.files;
@@ -49,11 +53,59 @@ const UserUpdateModal = ({ open, onOpenChange }) => {
     e.preventDefault();
     if (!validate()) return;
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise((res) => setTimeout(res, 1200));
-    // TODO: handle actual update logic
-    setIsSubmitting(false);
-    // Optionally close modal or show success
+    let key;
+    try {
+      if (file) {
+        const { data } = await api.post(
+          "/upload",
+          {
+            fileName: file.name,
+            contentType: file.type,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const { url } = data.data;
+        key = data.data.key;
+
+        await fetch(url, {
+          method: "PUT",
+          headers: { "Content-Type": file.type },
+          body: file,
+        });
+      }
+
+      const userData = {
+        name,
+        username,
+        profileImage: key,
+      };
+
+      const { data: response } = await api.patch("/user", userData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const { data } = response;
+
+      login(data);
+      setUsername(user?.username || "");
+      setName(user?.name || "");
+      setFile(null);
+      setPreview("");
+      setErrors({});
+      onOpenChange(false);
+    } catch (error) {
+      toast.error("Failed to update profile. Please try again.");
+      console.log(error)
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
