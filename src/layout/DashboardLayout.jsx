@@ -94,11 +94,7 @@ const DashboardLayout = () => {
         }
       );
 
-      setChats((prevChats) =>
-        prevChats.map((chat) =>
-          chat._id === chatId ? { ...chat, isArchived: !isArchived } : chat
-        )
-      );
+      fetchChats(); 
       toast.success("Chat archived successfully");
     } catch (error) {
       console.error("Error archiving chat:", error);

@@ -1,20 +1,29 @@
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronsUpDown, LogOut } from "lucide-react";
+import { Archive, ChevronsUpDown, LogOut } from "lucide-react";
 import { Button } from "./ui/button";
 import CustomAvatar from "./CustomAvatar";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const UserMenu = () => {
   const [open, setOpen] = useState(false);
   const { logout, user } = useAuth();
   const menuRef = useRef(null);
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
   };
 
   const Buttons = [
+    {
+      classNames:
+        "w-full flex items-center gap-2 px-4 py-2 rounded-lg text-left  cursor-pointer ",
+      onclickFunc: () => navigate("/archive"),
+      title: "Archived",
+      icon: Archive,
+    },
     {
       classNames:
         "w-full flex items-center gap-2 px-4 py-2 rounded-lg text-left text-red-600 cursor-pointer dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30",

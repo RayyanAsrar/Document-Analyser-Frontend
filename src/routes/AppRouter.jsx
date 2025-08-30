@@ -10,6 +10,7 @@ import UploadPage from "../pages/Upload";
 import ChatPage from "../pages/ChatPage";
 import CollectionPage from "../pages/CollectionPage";
 import AuthLayout from "../layout/AuthLayout";
+import ArchivePage from "../pages/ArchivePage";
 
 const AppRouter = () => {
   return (
@@ -18,7 +19,13 @@ const AppRouter = () => {
       <Route path="/" element={<HomePage />} />
 
       {/* Guest-only routes */}
-      <Route element={<GuestRoute><AuthLayout /></GuestRoute>}>
+      <Route
+        element={
+          <GuestRoute>
+            <AuthLayout />
+          </GuestRoute>
+        }
+      >
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
       </Route>
@@ -34,6 +41,7 @@ const AppRouter = () => {
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/chat/:id" element={<ChatPage />} />
         <Route path="/collection" element={<CollectionPage />} />
+        <Route path="/archive" element={<ArchivePage />} />
       </Route>
     </Routes>
   );

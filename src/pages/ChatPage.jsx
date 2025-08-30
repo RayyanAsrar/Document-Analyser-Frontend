@@ -19,8 +19,8 @@ export default function ChatPage() {
   const [submitting, setSubmitting] = useState(false);
   const messagesEndRef = useRef(null);
   const token = Cookie.get("token");
+  const [errorMessage, setErrorMessage] = useState(null);
 
-  // Fetch chat
   const fetchChat = useCallback(async () => {
     try {
       setLoading(true);
@@ -30,7 +30,9 @@ export default function ChatPage() {
       setChat(data.data?.chat || null);
       setQuestions(data.data?.questions || []);
     } catch (err) {
-      toast.error(getApiMessage(err, "Error fetching chat"));
+      const message = getApiMessage(err, "Error fetching chat");
+      toast.error(message);
+      setErrorMessage(message);
     } finally {
       setLoading(false);
     }
@@ -43,7 +45,6 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [questions]);
 
-  // Ask question (stream)
   const askQuestion = async () => {
     const text = newQuestion.trim();
     if (!text) return;
@@ -109,7 +110,7 @@ export default function ChatPage() {
   };
 
   if (loading) return <ChatSkeleton />;
-  if (!chat) return <ChatError />;
+  if (!chat) return <ChatError msg={errorMessage} />;
 
   return (
     <section className="flex flex-col h-full min-h-[calc(100vh-85px)]">
