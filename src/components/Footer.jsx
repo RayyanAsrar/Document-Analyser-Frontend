@@ -3,7 +3,8 @@ import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
 
 const linkedinLinkOvais = "https://linkedin.com/in/0vai5";
-const linkedinLinkRayyan = "https://www.linkedin.com/in/rayyan-asrar-8a44aa31a/";
+const linkedinLinkRayyan =
+  "https://www.linkedin.com/in/rayyan-asrar-8a44aa31a/";
 
 const Footer = () => {
   const year = new Date().getFullYear();
