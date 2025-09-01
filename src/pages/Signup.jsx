@@ -14,6 +14,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { LoaderCircle } from "lucide-react";
 import api, { getApiMessage } from "../lib/apiClient";
+import GoogleAuth from "../components/GoogleAuth";
 
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -141,6 +142,9 @@ export default function SignUpPage() {
                 "Create Account"
               )}
             </Button>
+            <div className="w-full">
+              <GoogleAuth />
+            </div>
             <p className="text-sm text-muted-foreground text-center">
               Already have an account?{" "}
               <Link

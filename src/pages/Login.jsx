@@ -16,6 +16,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import api from "../lib/apiClient";
 import Cookie from "js-cookie";
+import GoogleAuth from "../components/GoogleAuth";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -104,6 +105,10 @@ export default function LoginPage() {
                 "Sign In"
               )}
             </Button>
+
+            <div className="w-full">
+              <GoogleAuth />
+            </div>
             <p className="text-sm text-muted-foreground text-center">
               Don&apos;t have an account?{" "}
               <Link
