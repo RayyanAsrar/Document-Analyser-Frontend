@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useAuth } from "../context/AuthContext";
 
 const Greetings = () => {
   const { user } = useAuth();
-const lines = [
+  const lines = [
     "Upload a document to get started or view your collection.",
     "Explore the features and capabilities of our document analysis tools.",
     "Get insights and summaries from your documents with ease.",
@@ -18,15 +18,21 @@ const lines = [
     "Need help? Check out our support resources.",
     "Stay productive with our intuitive interface.",
     "Automate repetitive tasks and save time.",
-    ""
-]
+    "",
+  ];
+  const greetingSub = useMemo(
+    () => lines[(Math.random() * lines.length) | 0],
+    []
+  );
   return (
     <div>
       <h1 className="text-2xl font-bold">
-        {user ? `Welcome back, ${user.name}! 👋` : "Welcome to Document Analyser!"}
+        {user
+          ? `Welcome back, ${user.name}! 👋`
+          : "Welcome to Document Analyser!"}
       </h1>
       <p className=" text-muted-foreground">
-        {lines[Math.random() * lines.length | 0]}
+        {greetingSub}
       </p>
     </div>
   );
