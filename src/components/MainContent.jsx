@@ -18,7 +18,6 @@ export function MainContent() {
   const token = Cookie.get("token");
   const { addChats } = useChats();
 
-  // 🔥 Upload logic
   const handleFileUpload = async () => {
     if (!selectedFile) return;
 
@@ -74,7 +73,6 @@ export function MainContent() {
     }
   };
 
-  // 🎯 File selection
   const handleFileSelect = (e) => {
     const file = e?.target?.files?.[0];
     if (!file) return;
@@ -93,7 +91,6 @@ export function MainContent() {
 
   const handleRemoveFile = () => setSelectedFile(null);
 
-  // 🎯 Drag & drop
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
     setIsDragOver(true);
@@ -123,10 +120,9 @@ export function MainContent() {
       </div>
 
       <div className="flex-1 flex flex-col gap-4 items-center justify-center my-10">
-        {/* Drag & Drop / File Info Card */}
         <Card
           className={cn(
-            "w-full max-w-2xl h-72 border-2 border-dashed transition-all duration-300 flex items-center justify-center cursor-pointer group p-0 md:px-2",
+            "w-full max-w-2xl h-72 border-2 border-dashed transition-all duration-300 flex items-center justify-center cursor-pointer group md:p-0 px-4",
             isDragOver
               ? "border-primary bg-primary/5 shadow-lg shadow-primary/20"
               : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/20 hover:shadow-md"

@@ -170,54 +170,53 @@ const DashboardLayout = () => {
                     </span>
                   ) : (
                     chats.map((chat) => (
-                      <div
-                        key={chat._id}
-                        className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-muted/50 transition-colors group/chat"
+                      <NavLink
+                        to={`/chat/${chat._id}`}
+                        className={({ isActive }) =>
+                          `flex-1 truncate rounded-md px-2 py-1 ${
+                            isActive ? "font-medium" : ""
+                          }`
+                        }
                       >
-                        <NavLink
-                          to={`/chat/${chat._id}`}
-                          className={({ isActive }) =>
-                            `flex-1 truncate rounded-md px-2 py-1 ${
-                              isActive ? "bg-muted font-medium" : ""
-                            }`
-                          }
+                        <div
+                          key={chat._id}
+                          className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-muted/50 transition-colors group/chat"
                         >
                           {chat?.file?.name?.slice(0, 30) || "Untitled Chat"}
-                        </NavLink>
 
-                        {/* Dropdown Actions */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              className="opacity-0 group-hover/chat:opacity-100 transition-opacity p-1 rounded-md hover:bg-muted cursor-pointer"
-                              aria-label="Chat actions"
-                            >
-                              <MoreHorizontal className="w-4 h-4" />
-                            </button>
-                          </DropdownMenuTrigger>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                className="opacity-0 group-hover/chat:opacity-100 transition-opacity p-1 rounded-md hover:bg-muted cursor-pointer"
+                                aria-label="Chat actions"
+                              >
+                                <MoreHorizontal className="w-4 h-4" />
+                              </button>
+                            </DropdownMenuTrigger>
 
-                          <DropdownMenuContent align="end" className="w-32">
-                            <DropdownMenuItem
-                              className="cursor-pointer"
-                              onClick={() =>
-                                handleArchive(chat._id, chat.isArchived)
-                              }
-                            >
-                              <Archive className="mr-2 h-4 w-4" />
-                              Archive
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-red-600 focus:text-red-600 cursor-pointer"
-                              onClick={() =>
-                                handleDelete(chat._id, chat.isDeleted)
-                              }
-                            >
-                              <Trash className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
+                            <DropdownMenuContent align="end" className="w-32">
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() =>
+                                  handleArchive(chat._id, chat.isArchived)
+                                }
+                              >
+                                <Archive className="mr-2 h-4 w-4" />
+                                Archive
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-red-600 focus:text-red-600 cursor-pointer"
+                                onClick={() =>
+                                  handleDelete(chat._id, chat.isDeleted)
+                                }
+                              >
+                                <Trash className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </NavLink>
                     ))
                   )}
                 </div>
