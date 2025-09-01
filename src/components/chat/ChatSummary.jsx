@@ -1,4 +1,5 @@
 import ReactMarkdown from "react-markdown";
+import MarkdownRender from "../MarkdownRender";
 
 const ChatSummary = ({ summary }) => {
   if (!summary)
@@ -14,7 +15,7 @@ const ChatSummary = ({ summary }) => {
             transition: "max-height 0.4s cubic-bezier(0.4,0,0.2,1)",
           }}
         >
-          <ReactMarkdown>{summary}</ReactMarkdown>
+          <MarkdownRender content={summary} />
         </div>
       </div>
     </div>

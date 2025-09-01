@@ -77,7 +77,9 @@ export default function ChatPage() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
+        const chunk = decoder
+          .decode(value, { stream: true })
+          .replace(/[ \t]+$/gm, "");
         fullAnswer += chunk;
         setQuestions((prev) =>
           prev.map((q) =>
@@ -86,6 +88,7 @@ export default function ChatPage() {
         );
       }
 
+      fullAnswer = fullAnswer.trim();
       setQuestions((prev) =>
         prev.map((q) =>
           q._id === tempId
