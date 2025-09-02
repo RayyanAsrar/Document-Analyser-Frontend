@@ -1,6 +1,12 @@
 import MarkdownRender from "../MarkdownRender";
 import { Check, Copy, Download, Square, Volume2 } from "lucide-react";
 import { useRef, useState } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const ChatSummary = ({ summary }) => {
   const [copied, setCopied] = useState(false);
@@ -29,7 +35,7 @@ const ChatSummary = ({ summary }) => {
     speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(cleanSummary);
-    utterance.lang = "en-US"; // switch to "en-US" if needed
+    utterance.lang = "en-US"; // change if needed
     utterance.rate = 1;
     utterance.pitch = 1;
 
@@ -54,37 +60,73 @@ const ChatSummary = ({ summary }) => {
       <h2 className="font-semibold text-lg mb-1">Summary</h2>
 
       <div className="absolute top-2 right-2 text-xs text-muted-foreground flex gap-2">
-        <button
-          className="hover:bg-muted-foreground/30 p-1 rounded-sm"
-          onClick={handleCopy}
-          aria-label="Copy Summary"
-        >
-          {copied ? (
-            <Check className="w-4 h-4 text-green-500" />
-          ) : (
-            <Copy className="w-4 h-4 cursor-pointer hover:text-white" />
-          )}
-        </button>
+        <TooltipProvider delayDuration={150}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="hover:bg-gray-200/15 transition p-1 rounded cursor-pointer"
+                onClick={handleCopy}
+                aria-label="Copy Summary"
+              >
+                {copied ? (
+                  <Check className="w-4 h-4 text-green-500 cursor-pointer" />
+                ) : (
+                  <Copy className="w-4 h-4 cursor-pointer" />
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{copied ? "Copied!" : "Copy summary"}</p>
+            </TooltipContent>
+          </Tooltip>
 
-        <button
-          className="hover:bg-muted-foreground/30 p-1 rounded-sm"
-          onClick={handleDownload}
-          aria-label="Download Summary"
-        >
-          <Download className="w-4 h-4 cursor-pointer hover:text-white" />
-        </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="hover:bg-gray-200/15 transition p-1 rounded cursor-pointer"
+                onClick={handleDownload}
+                aria-label="Download Summary"
+              >
+                <Download className="w-4 h-4 cursor-pointer" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Download</p>
+            </TooltipContent>
+          </Tooltip>
 
-        <button
-          className="hover:bg-muted-foreground/30 p-1 rounded-sm"
-          onClick={talking ? handleStop : handleSpeak}
-          aria-label={talking ? "Stop Speech" : "Speak Summary"}
-        >
-          {talking ? (
-            <Square className="w-4 h-4 cursor-pointer hover:text-white" />
+          {!talking ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="hover:bg-gray-200/15 transition p-1 rounded cursor-pointer"
+                  onClick={handleSpeak}
+                  aria-label="Speak Summary"
+                >
+                  <Volume2 className="w-4 h-4 cursor-pointer" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Speak</p>
+              </TooltipContent>
+            </Tooltip>
           ) : (
-            <Volume2 className="w-4 h-4 cursor-pointer hover:text-white" />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="hover:bg-gray-200/15 transition p-1 rounded cursor-pointer"
+                  onClick={handleStop}
+                  aria-label="Stop Speech"
+                >
+                  <Square className="w-4 h-4 cursor-pointer" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Stop</p>
+              </TooltipContent>
+            </Tooltip>
           )}
-        </button>
+        </TooltipProvider>
       </div>
 
       <div className="text-muted-foreground">
