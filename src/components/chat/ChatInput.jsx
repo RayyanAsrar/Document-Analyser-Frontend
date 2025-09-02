@@ -11,7 +11,7 @@ const ChatInput = ({
   onKeyDown,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
-  const [tempTranscript, setTempTranscript] = useState(""); // holds current speech text
+  const [tempTranscript, setTempTranscript] = useState("");
   const recognitionRef = useRef(null);
 
   const startListening = () => {
@@ -20,6 +20,13 @@ const ChatInput = ({
     if (!SpeechRecognition) {
       alert("Speech recognition not supported in this browser.");
       return;
+    }
+
+    // Clean up previous instance
+    if (recognitionRef.current) {
+      recognitionRef.current.onresult = null;
+      recognitionRef.current.onerror = null;
+      recognitionRef.current.onend = null;
     }
 
     recognitionRef.current = new SpeechRecognition();
@@ -34,24 +41,48 @@ const ChatInput = ({
       }
       setTempTranscript(transcript);
     };
+    recognitionRef.current.onerror = (event) => {
+      alert("Speech recognition error: " + event.error);
+      setIsRecording(false);
+    };
+    recognitionRef.current.onend = () => {
+      setIsRecording(false);
+    };
 
-    recognitionRef.current.start();
-    setIsRecording(true);
+    try {
+      recognitionRef.current.start();
+      setIsRecording(true);
+    } catch (err) {
+      alert("Could not start speech recognition: " + err.message);
+      setIsRecording(false);
+    }
   };
 
   const stopListening = () => {
-    recognitionRef.current?.stop();
+    try {
+      recognitionRef.current?.stop();
+    } catch (err) {
+      alert("Could not stop speech recognition: " + err.message);
+    }
     setIsRecording(false);
     if (tempTranscript.trim()) {
-      setNewQuestion((prev) => prev + " " + tempTranscript.trim());
+      // Merge intelligently: add space only if needed
+      setNewQuestion(
+        (prev) =>
+          (prev.trim() ? prev.trim() + ". " : "") + tempTranscript.trim()
+      );
       setTempTranscript("");
     }
   };
 
   const cancelListening = () => {
-    recognitionRef.current?.stop();
+    try {
+      recognitionRef.current?.stop();
+    } catch (err) {
+      alert("Could not stop speech recognition: " + err.message);
+    }
     setIsRecording(false);
-    setTempTranscript(""); // clear only voice text
+    setTempTranscript("");
   };
 
   return (
@@ -68,22 +99,36 @@ const ChatInput = ({
 
         {isRecording ? (
           <>
-            <Button onClick={stopListening} className="shrink-0">
+            <Button
+              onClick={stopListening}
+              className="shrink-0"
+              aria-label="Stop recording"
+            >
               <Square className="w-4 h-4" /> {/* Stop button */}
             </Button>
-            <Button onClick={cancelListening} className="shrink-0 bg-muted-foreground">
+            <Button
+              onClick={cancelListening}
+              className="shrink-0 bg-muted-foreground"
+              aria-label="Cancel recording"
+            >
               <X className="w-4 h-4" /> {/* Cancel button */}
             </Button>
           </>
         ) : (
           <>
-            <Button onClick={startListening} className="shrink-0">
+            <Button
+              onClick={startListening}
+              className="shrink-0"
+              aria-label="Start voice input"
+              disabled={submitting}
+            >
               <Mic className="w-4 h-4" />
             </Button>
             <Button
               onClick={onSubmit}
               disabled={submitting || !newQuestion.trim()}
               className="shrink-0"
+              aria-label="Send message"
             >
               {submitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
