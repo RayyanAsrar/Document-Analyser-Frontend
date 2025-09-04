@@ -113,6 +113,27 @@ export function MainContent() {
     if (input) input.click();
   };
 
+  // Tips/messages to show while loading
+  const loadingTips = [
+    "Your internet connection may vary",
+    "The size of the file may affect upload time",
+    "Make sure your PDF is clear and readable",
+    "Avoid uploading scanned images for best results",
+    "Do not refresh or close the page during upload",
+  ];
+  const [tipIndex, setTipIndex] = useState(0);
+
+  React.useEffect(() => {
+    if (loading) {
+      const interval = setInterval(() => {
+        setTipIndex((prev) => (prev + 1) % loadingTips.length);
+      }, 2000);
+      return () => clearInterval(interval);
+    } else {
+      setTipIndex(0);
+    }
+  }, [loading, loadingTips.length]);
+
   return (
     <section className="">
       <div>
@@ -173,19 +194,26 @@ export function MainContent() {
         </Card>
 
         {selectedFile && (
-          <Button
-            onClick={selectedFile ? handleFileUpload : handleUploadClick}
-            disabled={loading || (!selectedFile && !loading)}
-            className="px-8 py-3 text-lg hover:scale-105 transition-transform animate-in fade-in duration-500"
-          >
-            {loading ? (
-              <>
-                Uploading... <LoaderCircle className="w-5 h-5 animate-spin" />
-              </>
-            ) : (
-              "Upload PDF"
+          <div className="w-full flex flex-col items-center">
+            <Button
+              onClick={selectedFile ? handleFileUpload : handleUploadClick}
+              disabled={loading || (!selectedFile && !loading)}
+              className="px-8 py-3 text-lg hover:scale-105 transition-transform animate-in fade-in duration-500"
+            >
+              {loading ? (
+                <>
+                  Uploading... <LoaderCircle className="w-5 h-5 animate-spin" />
+                </>
+              ) : (
+                "Upload PDF"
+              )}
+            </Button>
+            {loading && (
+              <div className="mt-4 text-sm text-muted-foreground animate-pulse">
+                <span>{loadingTips[tipIndex]}</span>
+              </div>
             )}
-          </Button>
+          </div>
         )}
 
         <input
