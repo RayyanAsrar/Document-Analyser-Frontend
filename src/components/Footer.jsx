@@ -17,12 +17,12 @@ const Footer = () => {
               <img
                 className="hidden dark:block w-32"
                 src="/OmniView AI-Dark.png"
-                alt="OmniView AI Logo"
+                alt="Clavero AI Logo"
               />
               <img
                 className="dark:hidden block w-32"
                 src="/OmniView AI-Light.png"
-                alt="OmniView AI Logo"
+                alt="Clavero AI Logo"
               />
             </Link>
           </div>
@@ -43,7 +43,7 @@ const Footer = () => {
       </div>
 
       <div className="text-center py-4 text-xs text-muted-foreground">
-        © {year} OmniViewAI — Founded by{" "}
+        © {year} Clavero — Founded by{" "}
         <span className="font-medium text-foreground">
           <a href={linkedinLinkOvais} target="_blank" rel="noopener noreferrer">
             Muhammad Ovais Raza

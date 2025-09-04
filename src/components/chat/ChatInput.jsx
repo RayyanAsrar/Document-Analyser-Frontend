@@ -140,7 +140,7 @@ const ChatInput = ({
         )}
       </div>
       <p className="text-xs text-center text-muted-foreground mt-2">
-        OmniView AI can make mistakes.{" "}
+        Clavero AI can make mistakes.{" "}
         <span className="font-semibold">
           Please verify any critical information.
         </span>

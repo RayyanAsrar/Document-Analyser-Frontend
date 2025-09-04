@@ -44,12 +44,12 @@ export function Navbar() {
               <img
                 className="hidden dark:block w-32"
                 src="/OmniView AI-Dark.png"
-                alt="OmniView AI"
+                alt="Clavero AI"
               />
               <img
                 className="dark:hidden block w-32"
                 src="/OmniView AI-Light.png"
-                alt="OmniView AI"
+                alt="Clavero AI"
               />
             </Link>
           </div>
