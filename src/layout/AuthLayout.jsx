@@ -16,7 +16,7 @@ const AuthLayout = () => {
           <Link to="/" className="mb-2">
             <img
               className="hidden dark:block w-36 drop-shadow-lg"
-              src="/Clavero AI-Dark.png"
+              src="/OmniView AI-Dark.png"
               alt="Clavero AI"
             />
             <img
