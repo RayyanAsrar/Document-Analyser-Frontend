@@ -81,8 +81,8 @@ export function MainContent() {
       toast.error("Only PDF files are supported");
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("File must be under 10MB");
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error("File must be under 20MB");
       return;
     }
 
@@ -113,7 +113,6 @@ export function MainContent() {
     if (input) input.click();
   };
 
-  // Tips/messages to show while loading
   const loadingTips = [
     "Your internet connection may vary",
     "The size of the file may affect upload time",
@@ -170,7 +169,7 @@ export function MainContent() {
               <h3 className="text-xl font-semibold">
                 {isDragOver ? "Drop your PDF here" : "Click or drag & drop PDF"}
               </h3>
-              <p className="text-muted-foreground">Supports PDF up to 10MB</p>
+              <p className="text-muted-foreground">Supports PDF up to 20MB</p>
             </div>
           ) : (
             <div className="flex items-center justify-between w-full max-w-md p-4 border rounded-lg shadow-sm bg-muted/30">
