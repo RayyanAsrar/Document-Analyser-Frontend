@@ -107,6 +107,14 @@ const DashboardLayout = () => {
     fetchChats();
   }, [fetchChats]);
 
+  const getChatName = (index) => {
+    const chat = chats[index];
+    const splitted = chat?.file?.name?.split(".");
+    if (!splitted) return "Untitled Chat";
+    splitted.pop();
+    return splitted.join(".").slice(0, 25) || "Untitled Chat";
+  }
+
   return (
     <SidebarProvider open={open} onOpenChange={setOpen}>
       <AppSidebar>
@@ -169,11 +177,11 @@ const DashboardLayout = () => {
                       No chats yet
                     </span>
                   ) : (
-                    chats.map((chat) => (
+                    chats.map((chat, index) => (
                       <NavLink
                         to={`/chat/${chat._id}`}
                         className={({ isActive }) =>
-                          `flex-1 truncate rounded-md px-2 py-1 ${
+                          `flex-1 truncate rounded-md px-1 py-1 ${
                             isActive ? "font-medium" : ""
                           }`
                         }
@@ -182,7 +190,7 @@ const DashboardLayout = () => {
                           key={chat._id}
                           className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-muted/50 transition-colors group/chat"
                         >
-                          {chat?.file?.name?.slice(0, 30) || "Untitled Chat"}
+                          {getChatName(index)}
 
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
